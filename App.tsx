@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import GameMenu from './components/GameMenu';
 import GameBoard from './components/GameBoard';
@@ -8,6 +9,7 @@ import CrosswordMenu from './components/crossword/CrosswordMenu';
 import CrosswordBoard from './components/crossword/CrosswordBoard';
 import WordDetectiveMenu from './components/word-detective/WordDetectiveMenu';
 import WordDetectiveBoard from './components/word-detective/WordDetectiveBoard';
+import LoadingSpinner from './components/LoadingSpinner';
 import { GameState, Question, GameSettings, UserProgress, difficulties, CrosswordPuzzle, CrosswordSettings, WordDetectivePuzzle, WordDetectiveSettings } from './types';
 import { generateQuestions, getCrosswordPuzzle, getWordDetectivePuzzles } from './services/gameDataService';
 import { getUserProgress, saveUserProgress, getXPForNextLevel } from './utils/progress';
@@ -24,15 +26,16 @@ const App: React.FC = () => {
   const [userProgress, setUserProgress] = useState<UserProgress>(() => getUserProgress());
   const [lastGameResult, setLastGameResult] = useState<{ score: number; xpGained: number; levelledUp: boolean, oldProgress: UserProgress } | null>(null);
 
-  const startGame = useCallback((settings: GameSettings) => {
+  const startGame = useCallback(async (settings: GameSettings) => {
     setGameSettings(settings);
     setWordDetectiveSettings(null);
     setError(null);
+    setGameState(GameState.LOADING);
 
     try {
-      const fetchedQuestions = generateQuestions(settings);
+      const fetchedQuestions = await generateQuestions(settings);
       if (fetchedQuestions.length === 0) {
-        throw new Error("Could not find any questions for the selected topic. The database might be empty for this category.");
+        throw new Error("Could not find or generate any questions for the selected topic. Please try different settings.");
       }
       setQuestions(fetchedQuestions);
       setGameState(GameState.PLAYING);
@@ -40,7 +43,8 @@ const App: React.FC = () => {
       setError(err.message || 'An unknown error occurred while preparing the game.');
       setGameState(GameState.ERROR);
     }
-  }, []);
+    // FIX: Add all state setters to the dependency array.
+  }, [setGameSettings, setWordDetectiveSettings, setError, setGameState, setQuestions]);
   
   const startCrossword = useCallback((settings: CrosswordSettings) => {
     setError(null);
@@ -53,7 +57,8 @@ const App: React.FC = () => {
       setError(err.message || 'An unknown error occurred while preparing the crossword.');
       setGameState(GameState.ERROR);
     }
-  }, []);
+    // FIX: Add all state setters to the dependency array.
+  }, [setCrosswordPuzzle, setCrosswordSettings, setGameState, setError]);
 
   const startWordDetective = useCallback((settings: WordDetectiveSettings) => {
     setError(null);
@@ -67,7 +72,8 @@ const App: React.FC = () => {
       setError(err.message || 'An unknown error occurred while preparing Word Detective.');
       setGameState(GameState.ERROR);
     }
-  }, []);
+    // FIX: Add all state setters to the dependency array.
+  }, [setError, setGameSettings, setWordDetectivePuzzles, setWordDetectiveSettings, setGameState]);
 
   const handleGameEnd = useCallback((finalScore: number) => {
     const oldProgress = { ...userProgress };
@@ -92,7 +98,8 @@ const App: React.FC = () => {
     
     setLastGameResult({ score: finalScore, xpGained, levelledUp, oldProgress });
     setGameState(GameState.FINISHED);
-  }, [userProgress, gameSettings]);
+    // FIX: Add all dependencies to the dependency array.
+  }, [userProgress, gameSettings, setUserProgress, setLastGameResult, setGameState]);
 
   const handleWordDetectiveEnd = useCallback((finalScore: number) => {
     const oldProgress = { ...userProgress };
@@ -118,7 +125,8 @@ const App: React.FC = () => {
     
     setLastGameResult({ score: finalScore, xpGained, levelledUp, oldProgress });
     setGameState(GameState.FINISHED);
-  }, [userProgress, wordDetectiveSettings]);
+    // FIX: Add all dependencies to the dependency array.
+  }, [userProgress, wordDetectiveSettings, setUserProgress, setLastGameResult, setGameState]);
 
   const handleReturnToHome = () => {
     setGameState(GameState.MENU);
@@ -158,9 +166,9 @@ const App: React.FC = () => {
     setWordDetectiveSettings(null);
   };
 
-  const restartGame = () => {
+  const restartGame = async () => {
     if (gameSettings) {
-      startGame(gameSettings);
+      await startGame(gameSettings);
     } else if (wordDetectiveSettings) {
       startWordDetective(wordDetectiveSettings);
     }
@@ -174,6 +182,7 @@ const App: React.FC = () => {
       case GameState.MENU:
         return <GameMenu onStartGame={startGame} userProgress={userProgress} onNavigateToMoreGames={handleNavigateToMoreGames} />;
       case GameState.LOADING: 
+        return <LoadingSpinner message="Preparing your questions..." />;
       case GameState.PLAYING:
         if (!gameSettings || questions.length === 0) {
           setError("Game data is missing. Please return to the menu.");
@@ -237,6 +246,9 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 font-sans relative">
+       <footer className="fixed top-0 left-1/2 -translate-x-1/2 py-2 text-xs text-dark-brown/50 font-light z-20">
+            Created by Shalaka Kashikar
+        </footer>
       <main className="w-full max-w-2xl mx-auto">
         {renderContent()}
       </main>

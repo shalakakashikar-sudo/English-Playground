@@ -194,6 +194,38 @@
         color: white;
         opacity: 0.6;
       }
+
+      /* Mascot Commentary Styles */
+      .speech-bubble {
+        position: absolute;
+        background: #fff;
+        border-radius: .4em;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        color: #1E1A18;
+        box-shadow: 0 4px 15px rgba(30, 26, 24, 0.1);
+        border: 2px solid #1E1A18;
+        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        opacity: 0;
+        transform: translateY(10px) scale(0.9);
+      }
+      .speech-bubble.visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      .speech-bubble:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border: 12px solid transparent;
+        border-top-color: #1E1A18;
+        border-bottom: 0;
+        margin-left: -12px;
+        margin-bottom: -12px;
+      }
     </style>
     <script>
       tailwind.config = {
@@ -250,6 +282,28 @@
                 '0%, 100%': { transform: 'translateY(0)' },
                 '50%': { transform: 'translateY(-6px)' },
               },
+              'mascot-correct': {
+                '0%, 100%': { transform: 'translateY(0) scale(1)' },
+                '20%': { transform: 'translateY(-10px) scale(1.1) rotate(-5deg)' },
+                '40%': { transform: 'translateY(0) scale(0.95)' },
+                '60%': { transform: 'translateY(-5px) scale(1.05) rotate(5deg)' },
+                '80%': { transform: 'translateY(0) scale(1)' },
+              },
+              'mascot-incorrect': {
+                '0%, 100%': { transform: 'translateX(0)' },
+                '20%, 60%': { transform: 'translateX(-4px) rotate(-3deg)' },
+                '40%, 80%': { transform: 'translateX(4px) rotate(3deg)' },
+              },
+              'mascot-wowed': {
+                '0%, 100%': { transform: 'scale(1)' },
+                '30%': { transform: 'scale(1.2) rotate(5deg)' },
+                '60%': { transform: 'scale(0.9) rotate(-5deg)' },
+                '80%': { transform: 'scale(1.1)' },
+              },
+              'mascot-sad': {
+                '0%, 100%': { transform: 'translateY(0) rotate(0)' },
+                '50%': { transform: 'translateY(5px) rotate(-2deg)' },
+              }
             },
             animation: {
               'fade-in': 'fade-in 0.5s ease-in-out',
@@ -259,6 +313,10 @@
               tada: 'tada 1s ease-in-out',
               'bounce-in': 'bounce-in 0.6s ease-out both',
               'gentle-bounce': 'gentle-bounce 2.5s ease-in-out infinite',
+              'mascot-correct': 'mascot-correct 0.8s ease-in-out',
+              'mascot-incorrect': 'mascot-incorrect 0.6s ease-in-out',
+              'mascot-wowed': 'mascot-wowed 0.7s ease-in-out',
+              'mascot-sad': 'mascot-sad 1s ease-in-out',
             }
           }
         }

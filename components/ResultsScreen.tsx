@@ -1,10 +1,13 @@
+
 import React, { useEffect, useState } from 'react';
 import Mascot from './Mascot';
 import confetti from 'canvas-confetti';
-import { UserProgress, DailyContentData } from '../types';
+// FIX: Import MascotState from the central types file.
+import { UserProgress, DailyContentData, MascotState } from '../types';
 import { getXPForNextLevel, getPlayerTitle } from '../utils/progress';
 import QuoteOfTheDay from './QuoteOfTheDay';
 import { getDailyContent } from '../services/gameDataService';
+import { getRandomComment } from '../database/mascotComments';
 
 interface ResultsScreenProps {
   score: number;
@@ -105,11 +108,18 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, totalQuestions, on
     onBackToMenu();
   };
 
+  const getMascotStateForScore = (percentage: number): MascotState => {
+    if (percentage >= 95) return 'wowed';
+    if (percentage >= 70) return 'happy';
+    if (percentage > 40) return 'default';
+    return 'sad';
+  };
+
   const getFeedback = () => {
-    if (percentage > 80) return "Excellent work! You're a true word wizard!";
-    if (percentage > 60) return "Great job! Keep practicing to reach the top!";
-    if (percentage > 40) return "Nice try! Every attempt is a step forward.";
-    return "Keep going! Practice makes perfect.";
+    if (percentage >= 95) return getRandomComment('WOWED_SCORE');
+    if (percentage >= 70) return getRandomComment('HIGH_SCORE');
+    if (percentage > 40) return getRandomComment('MEDIUM_SCORE');
+    return getRandomComment('SAD_SCORE');
   };
 
   const xpForDisplayLevel = getXPForNextLevel(displayProgress.level);
@@ -118,7 +128,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, totalQuestions, on
   return (
     <div className="bg-white/10 backdrop-blur-sm shadow-2xl rounded-3xl p-8 md:p-12 text-center border-2 border-dark-brown/20 animate-fade-in">
       <div className="flex justify-center mb-6">
-        <Mascot />
+        <Mascot state={getMascotStateForScore(percentage)} />
       </div>
       <h1 className="text-4xl font-bold mb-2">Game Over!</h1>
       <p className="text-lg text-dark-brown/80 mb-6">{getFeedback()}</p>

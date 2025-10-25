@@ -53,6 +53,9 @@ export interface FlashcardProgress {
   [term: string]: FlashcardStatus;
 }
 
+// FIX: Add MascotState type here for centralization.
+export type MascotState = 'default' | 'thinking' | 'correct' | 'incorrect' | 'happy' | 'wowed' | 'sad';
+
 export enum GameState {
   MENU,
   LOADING, // Kept for future use, but not currently entered in the main flow

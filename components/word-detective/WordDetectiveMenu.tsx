@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Difficulty, UserProgress, WordDetectiveSettings, wordDetectiveQuestionCounts } from '../../types';
 import { difficulties } from '../../types';
@@ -13,6 +14,14 @@ interface WordDetectiveMenuProps {
 
 const MIN_LEVEL_FOR_EXAM = 5;
 const gameTopics: ('Words' | 'Idioms')[] = ['Words', 'Idioms'];
+
+// Descriptions for difficulty levels
+const difficultyDescriptions: Record<Difficulty, string> = {
+  Easy: 'Common words and simple phrases.',
+  Medium: 'Longer words and more complex vocabulary.',
+  Hard: 'Challenging vocabulary and multi-word idioms.',
+  Exam: 'Advanced, obscure, or technical terminology.'
+};
 
 const CustomSelect = <T extends string | number,>({ label, value, options, onChange, optionTransformer }: { label: string, value: T, options: readonly T[], onChange: (value: T) => void, optionTransformer?: (opt: T) => string }) => (
     <div className="w-full">
@@ -95,6 +104,11 @@ const WordDetectiveMenu: React.FC<WordDetectiveMenuProps> = ({ onStartGame, user
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-dark-brown">
               <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
             </div>
+          </div>
+          <div className="mt-1 min-h-[2rem] flex items-center justify-center overflow-hidden">
+            <p key={difficulty} className="text-xs text-dark-brown/60 text-center animate-fade-in">
+              {difficultyDescriptions[difficulty]}
+            </p>
           </div>
           {isExamLocked && (
             <p className="text-xs text-dark-brown/60 text-center mt-1">

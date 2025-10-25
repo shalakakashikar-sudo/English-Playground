@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-// FIX: Imported Difficulty type to be used for state and casting.
-import { GameSettings, UserProgress, DailyContentData, Difficulty } from '../types';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { GameSettings, UserProgress, DailyContentData, Difficulty, MascotState } from '../types';
 import { difficulties, topics, questionCounts, timeLimits } from '../types';
 import Mascot from './Mascot';
 import WordOfTheDay from './WordOfTheDay';
@@ -10,6 +10,8 @@ import QuoteOfTheDay from './QuoteOfTheDay';
 import Flashcards from './Flashcards';
 import { getDailyContent } from '../services/gameDataService';
 import { getFlashcardProgress } from '../utils/flashcardProgress';
+import MascotCommentary from './MascotCommentary';
+import { getRandomComment } from '../database/mascotComments';
 
 interface GameMenuProps {
   onStartGame: (settings: GameSettings) => void;
@@ -18,18 +20,51 @@ interface GameMenuProps {
 }
 
 const MIN_LEVEL_FOR_EXAM = 5;
+const SETTINGS_KEY = 'englishPlaygroundLastSettings';
 
 const GameMenu: React.FC<GameMenuProps> = ({ onStartGame, userProgress, onNavigateToMoreGames }) => {
-  const [topic, setTopic] = useState(topics[0]);
-  const [difficulty, setDifficulty] = useState<Difficulty>(difficulties[0]);
-  const [numQuestions, setNumQuestions] = useState(questionCounts[0]);
-  const [timePerQuestion, setTimePerQuestion] = useState(timeLimits[1]); // Default to 10s
+  const [initialSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem(SETTINGS_KEY);
+      if (saved) {
+        const settings = JSON.parse(saved);
+        // Validate that the saved settings are still valid options
+        if (
+          topics.includes(settings.topic) &&
+          difficulties.includes(settings.difficulty) &&
+          questionCounts.includes(settings.numQuestions) &&
+          timeLimits.includes(settings.timePerQuestion)
+        ) {
+          return settings;
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load settings:", error);
+    }
+    return {
+      topic: topics[0],
+      difficulty: difficulties[0] as Difficulty,
+      numQuestions: questionCounts[0],
+      timePerQuestion: timeLimits[1] // Default to 10s
+    };
+  });
+
+  const [topic, setTopic] = useState(initialSettings.topic);
+  const [difficulty, setDifficulty] = useState<Difficulty>(initialSettings.difficulty);
+  const [numQuestions, setNumQuestions] = useState(initialSettings.numQuestions);
+  const [timePerQuestion, setTimePerQuestion] = useState(initialSettings.timePerQuestion);
 
   const [dailyContent, setDailyContent] = useState<DailyContentData | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
   
   const isExamLocked = userProgress.level < MIN_LEVEL_FOR_EXAM;
   const playerTitle = getPlayerTitle(userProgress.level);
+
+  // Mascot interaction states
+  const [mascotAnimation, setMascotAnimation] = useState<MascotState>('default');
+  const [mascotMessage, setMascotMessage] = useState<string>('');
+  const [isCommentaryVisible, setIsCommentaryVisible] = useState(false);
+  const commentaryTimeoutRef = useRef<number | null>(null);
 
   // Reset difficulty if 'Exam' is selected but becomes locked (unlikely edge case, but safe)
   useEffect(() => {
@@ -63,7 +98,32 @@ const GameMenu: React.FC<GameMenuProps> = ({ onStartGame, userProgress, onNaviga
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onStartGame({ topic, difficulty, numQuestions, timePerQuestion: Number(timePerQuestion) });
+    const currentSettings = { topic, difficulty, numQuestions, timePerQuestion: Number(timePerQuestion) };
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentSettings));
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+    }
+    onStartGame(currentSettings);
+  };
+  
+  const handleMascotClick = () => {
+    setMascotAnimation('wowed');
+    setTimeout(() => setMascotAnimation('default'), 700); // Duration of 'wowed' animation
+
+    // Show random message
+    setMascotMessage(getRandomComment('MASCOT_CLICK'));
+    setIsCommentaryVisible(true);
+    
+    // Clear any existing timeout to avoid premature hiding
+    if (commentaryTimeoutRef.current) {
+        clearTimeout(commentaryTimeoutRef.current);
+    }
+    
+    // Set a new timeout to hide the message
+    commentaryTimeoutRef.current = window.setTimeout(() => {
+        setIsCommentaryVisible(false);
+    }, 2500);
   };
   
   const CustomSelect = <T extends string | number,>({ label, value, options, onChange, optionTransformer }: { label: string, value: T, options: readonly T[], onChange: (value: T) => void, optionTransformer?: (opt: T) => string }) => (
@@ -90,8 +150,20 @@ const GameMenu: React.FC<GameMenuProps> = ({ onStartGame, userProgress, onNaviga
 
   return (
     <div className="bg-white/10 backdrop-blur-sm shadow-2xl rounded-3xl p-8 md:p-12 text-center border-2 border-dark-brown/20 animate-fade-in">
-      <div className="flex justify-center mb-6">
-        <Mascot />
+       <div className="flex justify-center mb-6 h-36 items-end">
+        <div className="relative">
+          <div
+            className="cursor-pointer"
+            onClick={handleMascotClick}
+            role="button"
+            aria-label="Interact with mascot"
+          >
+            <Mascot state={mascotAnimation} />
+          </div>
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-48 pb-2">
+            <MascotCommentary message={mascotMessage} isVisible={isCommentaryVisible} />
+          </div>
+        </div>
       </div>
       <h1 className="text-4xl md:text-5xl font-bold mb-2">English Playground</h1>
       <p className="text-dark-brown/80 mb-6">Ready to test your skills?</p>

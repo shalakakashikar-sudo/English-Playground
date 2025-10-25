@@ -1,8 +1,9 @@
 // @/services/gameDataService.ts
 
 import { DB } from '../database/db';
-import { GameSettings, Question, DailyContentData, FlashcardData, Difficulty, CrosswordPuzzle, WordDetectiveSettings, WordDetectivePuzzle } from '../types';
+import { GameSettings, Question, DailyContentData, FlashcardData, Difficulty, CrosswordPuzzle, WordDetectiveSettings, WordDetectivePuzzle, Word, Idiom } from '../types';
 import { getFlashcardProgress } from '../utils/flashcardProgress';
+import * as geminiService from './geminiService';
 
 /**
  * Shuffles an array in place and returns it.
@@ -61,7 +62,7 @@ const createMultipleChoiceQuestion = (
     };
 };
 
-export const generateQuestions = (settings: GameSettings): Question[] => {
+export const generateQuestions = async (settings: GameSettings): Promise<Question[]> => {
   const { topic, numQuestions, difficulty } = settings;
   const questions: Question[] = [];
   
@@ -70,8 +71,31 @@ export const generateQuestions = (settings: GameSettings): Question[] => {
 
   switch (topic) {
     case 'Vocabulary': {
-      const filteredWords = DB.words.filter(w => w.difficulty === difficulty);
-      const shuffledWords = shuffle([...filteredWords]);
+      const cacheKey = `dynamic-vocab-${difficulty}`;
+      let cachedWords: Word[] = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+      const staticWords = DB.words.filter(w => w.difficulty === difficulty);
+      const allAvailableWords = [...staticWords, ...cachedWords];
+      let uniqueWords = Array.from(new Map(allAvailableWords.map(w => [w.term.toLowerCase(), w])).values());
+
+      if (uniqueWords.length < count) {
+        const wordsToFetch = 20;
+        const existingTerms = uniqueWords.map(w => w.term);
+        try {
+          console.log(`Fetching ${wordsToFetch} new '${difficulty}' vocabulary words...`);
+          const newWords = await geminiService.generateVocabulary(difficulty, wordsToFetch, existingTerms);
+          const updatedCache = [...cachedWords, ...newWords];
+          localStorage.setItem(cacheKey, JSON.stringify(updatedCache));
+          uniqueWords.push(...newWords);
+          uniqueWords = Array.from(new Map(uniqueWords.map(w => [w.term.toLowerCase(), w])).values());
+        } catch (e) {
+          console.error("Failed to fetch dynamic vocabulary content:", e);
+          if (uniqueWords.length === 0) {
+            throw new Error("Could not generate new questions. Please check your connection or try again later.");
+          }
+        }
+      }
+
+      const shuffledWords = shuffle([...uniqueWords]);
       for (let i = 0; i < Math.min(count, shuffledWords.length); i++) {
         const word = shuffledWords[i];
         const questionType = Math.random() > 0.5 ? 'definition' : 'term';
@@ -84,8 +108,31 @@ export const generateQuestions = (settings: GameSettings): Question[] => {
       break;
     }
     case 'Idioms': {
-      const filteredIdioms = DB.idioms.filter(i => i.difficulty === difficulty);
-      const shuffledIdioms = shuffle([...filteredIdioms]);
+      const cacheKey = `dynamic-idioms-${difficulty}`;
+      let cachedIdioms: Idiom[] = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+      const staticIdioms = DB.idioms.filter(i => i.difficulty === difficulty);
+      const allAvailableIdioms = [...staticIdioms, ...cachedIdioms];
+      let uniqueIdioms = Array.from(new Map(allAvailableIdioms.map(i => [i.term.toLowerCase(), i])).values());
+
+      if (uniqueIdioms.length < count) {
+          const idiomsToFetch = 15;
+          const existingTerms = uniqueIdioms.map(i => i.term);
+          try {
+              console.log(`Fetching ${idiomsToFetch} new '${difficulty}' idioms...`);
+              const newIdioms = await geminiService.generateIdioms(difficulty, idiomsToFetch, existingTerms);
+              const updatedCache = [...cachedIdioms, ...newIdioms];
+              localStorage.setItem(cacheKey, JSON.stringify(updatedCache));
+              uniqueIdioms.push(...newIdioms);
+              uniqueIdioms = Array.from(new Map(uniqueIdioms.map(i => [i.term.toLowerCase(), i])).values());
+          } catch (e) {
+              console.error("Failed to fetch dynamic idiom content:", e);
+              if (uniqueIdioms.length === 0) {
+                  throw new Error("Could not generate new idioms. Please check your connection or try again later.");
+              }
+          }
+      }
+
+      const shuffledIdioms = shuffle([...uniqueIdioms]);
       for (let i = 0; i < Math.min(count, shuffledIdioms.length); i++) {
         const idiom = shuffledIdioms[i];
         // For idioms, asking for the definition is most common
