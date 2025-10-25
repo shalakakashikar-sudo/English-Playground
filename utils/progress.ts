@@ -7,6 +7,14 @@ export const getXPForNextLevel = (level: number): number => {
   return Math.floor(100 * Math.pow(level, 1.5));
 };
 
+export const getPlayerTitle = (level: number): string => {
+  if (level >= 20) return "English Master";
+  if (level >= 15) return "Grammar Guardian";
+  if (level >= 10) return "Idiom Explorer";
+  if (level >= 5) return "Word Wanderer";
+  return "Language Learner";
+};
+
 export const getUserProgress = (): UserProgress => {
   try {
     const savedProgress = localStorage.getItem(PROGRESS_KEY);

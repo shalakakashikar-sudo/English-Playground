@@ -59,6 +59,11 @@ export enum GameState {
   PLAYING,
   FINISHED,
   ERROR,
+  MORE_GAMES,
+  CROSSWORD_MENU,
+  CROSSWORD_PLAYING,
+  WORD_DETECTIVE_MENU,
+  WORD_DETECTIVE_PLAYING,
 }
 
 export type Difficulty = 'Easy' | 'Medium' | 'Hard' | 'Exam';
@@ -76,6 +81,7 @@ export interface Word {
   antonyms: string[];
   example: string;
   difficulty: Difficulty;
+  etymology?: string; // Add etymology for deeper explanations
 }
 
 export interface Idiom {
@@ -93,57 +99,43 @@ export interface GrammarQuestion {
   difficulty: Difficulty;
 }
 
-// --- THEME DEFINITIONS ---
-
-export type ThemeName = 'Classic' | 'Ocean' | 'Dusk' | 'Mint';
-
-export interface ThemeColors {
-  cream: string;
-  darkBrown: string;
-  mustard: string;
-  teal: string;
+// Types for Crossword Game
+export interface CrosswordSettings {
+  difficulty: Difficulty;
+  timerDuration: number; // in minutes. 0 means no timer.
 }
 
-export interface Theme {
-  name: ThemeName;
-  colors: ThemeColors;
+export const crosswordTimeLimits = [0, 1, 2, 5, 10];
+
+export interface CrosswordClue {
+    num: number;
+    row: number;
+    col: number;
+    clue: string;
+    length: number;
+}
+export interface CrosswordPuzzle {
+  id: string;
+  difficulty: Difficulty;
+  size: number;
+  gridSolution: (string | null)[][];
+  clues: {
+    across: CrosswordClue[];
+    down: CrosswordClue[];
+  };
 }
 
-export const themes: Record<ThemeName, Theme> = {
-  Classic: {
-    name: 'Classic',
-    colors: {
-      cream: '#FFF8EE',
-      darkBrown: '#1E1A18',
-      mustard: '#FFB000',
-      teal: '#00C2B2',
-    },
-  },
-  Ocean: {
-    name: 'Ocean',
-    colors: {
-      cream: '#E0F7FA', // Light cyan
-      darkBrown: '#004D40', // Dark teal
-      mustard: '#4DD0E1', // Cyan
-      teal: '#00796B', // Teal
-    },
-  },
-  Dusk: {
-    name: 'Dusk',
-    colors: {
-      cream: '#F3E5F5', // Lavender
-      darkBrown: '#4A148C', // Dark purple
-      mustard: '#F06292', // Pink
-      teal: '#AB47BC', // Purple
-    },
-  },
-  Mint: {
-    name: 'Mint',
-    colors: {
-        cream: '#F1F8E9',      // Light Green
-        darkBrown: '#33691E',   // Dark Green
-        mustard: '#AED581',    // Light Green
-        teal: '#689F38',       // Green
-    }
-  }
-};
+// Types for Word Detective Game
+export interface WordDetectiveSettings {
+  topic: 'Words' | 'Idioms';
+  difficulty: Difficulty;
+  numQuestions: number;
+}
+
+export const wordDetectiveQuestionCounts = [5, 10, 15];
+
+export interface WordDetectivePuzzle {
+  term: string;
+  definition: string;
+  topic: 'Words' | 'Idioms';
+}

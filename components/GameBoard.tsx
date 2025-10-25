@@ -164,7 +164,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ questions, settings, onGameEnd, o
                 <h3 className="font-bold text-teal text-lg">
                     {selectedAnswer === null ? "Time's Up!" : "Explanation:"}
                 </h3>
-                <p>{currentQuestion.explanation}</p>
+                <p className="whitespace-pre-wrap">{currentQuestion.explanation}</p>
             </div>
             )}
             <div className="flex justify-end pt-2">

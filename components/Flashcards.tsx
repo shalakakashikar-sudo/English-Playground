@@ -10,6 +10,7 @@ type CardState = FlashcardData & {
 
 interface FlashcardsProps {
     initialData: FlashcardData[] | null;
+    reviewCount: number;
 }
 
 const WordIcon = () => (
@@ -30,7 +31,7 @@ const SpeakerIcon = () => (
     </svg>
 );
 
-const Flashcards: React.FC<FlashcardsProps> = ({ initialData }) => {
+const Flashcards: React.FC<FlashcardsProps> = ({ initialData, reviewCount }) => {
   const [cards, setCards] = useState<CardState[]>([]);
   const [allCardsReviewed, setAllCardsReviewed] = useState(false);
 
@@ -53,7 +54,7 @@ const Flashcards: React.FC<FlashcardsProps> = ({ initialData }) => {
     e.stopPropagation();
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'en-US';
+      utterance.lang = 'en-GB';
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
     } else {
@@ -125,21 +126,21 @@ const Flashcards: React.FC<FlashcardsProps> = ({ initialData }) => {
                 </button>
                 <p className="text-lg sm:text-xl font-bold px-4">{card.term}</p>
               </div>
-              <div className="flashcard-back p-3 sm:p-4 justify-between">
-                <p className="text-sm sm:text-base font-medium text-center px-2">{card.definition}</p>
-                <div className="w-full flex justify-around items-center mt-4">
-                    <button 
-                        onClick={(e) => handleMarkCard(e, card.id, card.term, 'needs_review')}
-                        className="text-xs font-bold py-2 px-3 rounded-lg bg-mustard/20 text-mustard-800 hover:bg-mustard/40 transition-colors"
-                    >
-                        Needs Review
-                    </button>
-                    <button 
-                        onClick={(e) => handleMarkCard(e, card.id, card.term, 'known')}
-                        className="text-xs font-bold py-2 px-3 rounded-lg bg-teal/20 text-teal-800 hover:bg-teal/40 transition-colors"
-                    >
-                        Got It!
-                    </button>
+              <div className="flashcard-back p-3 sm:p-4 flex flex-col justify-between">
+                <p className="text-sm sm:text-base flex-grow">{card.definition}</p>
+                <div className="w-full flex justify-around items-center pt-2">
+                  <button
+                    onClick={(e) => handleMarkCard(e, card.id, card.term, 'known')}
+                    className="text-xs font-semibold bg-white/10 hover:bg-white/30 rounded-full px-3 py-1.5 transition-colors"
+                  >
+                    I Know This
+                  </button>
+                  <button
+                    onClick={(e) => handleMarkCard(e, card.id, card.term, 'needs_review')}
+                    className="text-xs font-semibold bg-white/10 hover:bg-white/30 rounded-full px-3 py-1.5 transition-colors"
+                  >
+                    Needs Review
+                  </button>
                 </div>
               </div>
             </div>
@@ -150,13 +151,22 @@ const Flashcards: React.FC<FlashcardsProps> = ({ initialData }) => {
   };
   
   return (
-    <div className="mb-8 w-full">
-        <div className="flex justify-center items-center relative mb-4">
-            <h2 className="text-base font-semibold text-dark-brown/60 tracking-wider uppercase">Flashcards</h2>
-        </div>
-        {renderContent()}
+    <div className="bg-dark-brown/5 p-4 sm:p-6 rounded-2xl mb-8 w-full">
+      <div className="flex items-center gap-3 mb-4">
+        <h2 className="text-lg font-semibold text-dark-brown/60 tracking-wider uppercase">Daily Flashcards</h2>
+        {reviewCount > 0 && (
+            <div className="relative group">
+                <div className="absolute -inset-1.5 bg-rose-500 rounded-full blur opacity-75 animate-pulse"></div>
+                <div className="relative h-4 w-4 bg-rose-500 rounded-full"></div>
+                <span className="absolute -top-6 -right-12 w-max px-2 py-1 text-xs text-white bg-dark-brown rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                    {reviewCount} card{reviewCount > 1 ? 's' : ''} for review!
+                </span>
+            </div>
+        )}
+      </div>
+      {renderContent()}
     </div>
-  )
+  );
 };
 
 export default Flashcards;

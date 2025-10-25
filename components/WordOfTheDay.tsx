@@ -10,7 +10,7 @@ const WordOfTheDay: React.FC<WordOfTheDayProps> = ({ data }) => {
   const handleSpeak = (textToSpeak: string) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'en-US';
+      utterance.lang = 'en-GB';
       window.speechSynthesis.cancel(); // Stop any previous speech
       window.speechSynthesis.speak(utterance);
     } else {

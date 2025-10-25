@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Mascot from './Mascot';
 import confetti from 'canvas-confetti';
 import { UserProgress, DailyContentData } from '../types';
-import { getXPForNextLevel } from '../utils/progress';
+import { getXPForNextLevel, getPlayerTitle } from '../utils/progress';
 import QuoteOfTheDay from './QuoteOfTheDay';
 import { getDailyContent } from '../services/gameDataService';
 
@@ -21,6 +21,10 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, totalQuestions, on
   const [displayProgress, setDisplayProgress] = useState<UserProgress>(oldProgress);
   const [dailyContent, setDailyContent] = useState<DailyContentData | null>(null);
   const percentage = Math.round((score / totalQuestions) * 100);
+
+  const oldTitle = getPlayerTitle(oldProgress.level);
+  const newTitle = getPlayerTitle(newProgress.level);
+  const hasNewTitle = levelledUp && oldTitle !== newTitle;
 
   // Confetti effect
   useEffect(() => {
@@ -126,8 +130,19 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, totalQuestions, on
       </div>
 
       <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">Progress</h2>
-          {levelledUp && <p className="text-2xl font-bold text-mustard animate-bounce mb-4">LEVEL UP!</p>}
+          <h2 className="text-2xl font-bold mb-2">Progress</h2>
+          
+          {levelledUp && (
+            <div className="bg-mustard/20 border-2 border-mustard rounded-2xl p-4 my-4 animate-tada">
+              <p className="text-3xl font-bold text-dark-brown">LEVEL UP!</p>
+              {hasNewTitle && (
+                <p className="text-xl font-semibold text-teal mt-1">
+                  New Title Unlocked: <span className="font-bold">{newTitle}!</span>
+                </p>
+              )}
+            </div>
+          )}
+
           <p className="text-lg font-semibold mb-4 text-teal">+{xpGained} XP</p>
           
           <div className="w-full">

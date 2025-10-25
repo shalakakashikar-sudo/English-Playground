@@ -1,7 +1,7 @@
 // @/services/gameDataService.ts
 
 import { DB } from '../database/db';
-import { GameSettings, Question, DailyContentData, FlashcardData, Difficulty } from '../types';
+import { GameSettings, Question, DailyContentData, FlashcardData, Difficulty, CrosswordPuzzle, WordDetectiveSettings, WordDetectivePuzzle } from '../types';
 import { getFlashcardProgress } from '../utils/flashcardProgress';
 
 /**
@@ -76,7 +76,10 @@ export const generateQuestions = (settings: GameSettings): Question[] => {
         const word = shuffledWords[i];
         const questionType = Math.random() > 0.5 ? 'definition' : 'term';
         const mcq = createMultipleChoiceQuestion(word, DB.words, questionType);
-        questions.push({ ...mcq, explanation: `"${word.term}" means: ${word.definition}.` });
+        
+        const fullExplanation = `"${word.term}" means: ${word.definition}\n\n${word.etymology || ''}\nExample: "${word.example}"`;
+
+        questions.push({ ...mcq, explanation: fullExplanation.trim() });
       }
       break;
     }
@@ -87,7 +90,7 @@ export const generateQuestions = (settings: GameSettings): Question[] => {
         const idiom = shuffledIdioms[i];
         // For idioms, asking for the definition is most common
         const mcq = createMultipleChoiceQuestion(idiom, DB.idioms, 'definition');
-        questions.push({ ...mcq, explanation: `The idiom "${idiom.term}" means: ${idiom.definition}. Example: ${idiom.example}` });
+        questions.push({ ...mcq, explanation: `The idiom "${idiom.term}" means: ${idiom.definition}.\n\nExample: ${idiom.example}` });
       }
       break;
     }
@@ -104,11 +107,12 @@ export const generateQuestions = (settings: GameSettings): Question[] => {
                 .filter(w => w.term !== word.term && !word.synonyms.includes(w.term))
                 .map(w => w.term);
             const options = shuffle([correctAnswer, ...shuffle(distractors).slice(0, 3)]);
+            const explanation = `A synonym for "${word.term}" is "${correctAnswer}".\n\nBoth words relate to its meaning: "${word.definition}". ${word.etymology ? `\n\n${word.etymology}` : ''}`;
             questions.push({
                 question: `Which of the following is a synonym for "${word.term}"?`,
                 options,
                 correctAnswer,
-                explanation: `A synonym for "${word.term}" is "${correctAnswer}". Both words relate to "${word.definition}".`
+                explanation: explanation.trim()
             });
         } else if (word.antonyms.length > 0) { // Antonym question
              const correctAnswer = shuffle([...word.antonyms])[0];
@@ -116,11 +120,12 @@ export const generateQuestions = (settings: GameSettings): Question[] => {
                 .filter(w => w.term !== word.term && !word.antonyms.includes(w.term))
                 .map(w => w.term);
              const options = shuffle([correctAnswer, ...shuffle(distractors).slice(0, 3)]);
+             const explanation = `An antonym for "${word.term}" is "${correctAnswer}". They have opposite meanings.\n\n"${word.term}" means: "${word.definition}".`;
              questions.push({
                 question: `Which of the following is an antonym for "${word.term}"?`,
                 options,
                 correctAnswer,
-                explanation: `An antonym for "${word.term}" is "${correctAnswer}". They have opposite meanings.`
+                explanation: explanation.trim()
             });
         }
       }
@@ -193,4 +198,46 @@ export const getDailyContent = (): DailyContentData => {
     },
     flashcards: selectedCards,
   };
+};
+
+export const getCrosswordPuzzle = (difficulty: Difficulty): CrosswordPuzzle => {
+  const availablePuzzles = DB.crosswords.filter(p => p.difficulty === difficulty);
+  
+  if (availablePuzzles.length === 0) {
+    // Fallback to Easy if no puzzles for the selected difficulty exist
+    const easyPuzzles = DB.crosswords.filter(p => p.difficulty === 'Easy');
+    if(easyPuzzles.length === 0) throw new Error(`No crossword puzzles found for difficulty: ${difficulty} or as a fallback.`);
+    return shuffle(easyPuzzles)[0];
+  }
+  
+  return shuffle(availablePuzzles)[0];
+};
+
+export const getWordDetectivePuzzles = (settings: WordDetectiveSettings): WordDetectivePuzzle[] => {
+  const { topic, difficulty, numQuestions } = settings;
+  let sourceData: { term: string; definition: string }[] = [];
+
+  if (topic === 'Words') {
+    sourceData = DB.words.filter(w => w.difficulty === difficulty);
+  } else { // Idioms
+    sourceData = DB.idioms.filter(i => i.difficulty === difficulty);
+  }
+
+  if (sourceData.length < numQuestions) {
+    // Fallback if not enough items for that difficulty, use any from the topic
+    const allTopicData = topic === 'Words' ? DB.words : DB.idioms;
+    sourceData = shuffle(allTopicData);
+  } else {
+    sourceData = shuffle(sourceData);
+  }
+
+  if (sourceData.length === 0) {
+    throw new Error(`No puzzles available for the topic: ${topic}.`);
+  }
+
+  return sourceData.slice(0, numQuestions).map(p => ({
+    term: p.term,
+    definition: p.definition,
+    topic,
+  }));
 };

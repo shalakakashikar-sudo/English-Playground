@@ -9,12 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-      :root {
-        --color-cream: #FFF8EE;
-        --color-dark-brown: #1E1A18;
-        --color-mustard: #FFB000;
-        --color-teal: #00C2B2;
-      }
       /* Flashcard specific styles */
       .flashcard-container {
         perspective: 1000px;
@@ -55,17 +49,150 @@
         border-radius: 1.5rem; /* rounded-3xl */
       }
       .flashcard-front {
-        background-color: var(--color-cream);
+        background-color: #FEFCF8;
         /* Gradient border to make the card pop */
         border: 3px solid transparent;
         background-clip: padding-box;
-        border-image: linear-gradient(45deg, var(--color-mustard), var(--color-teal)) 1;
+        border-image: linear-gradient(45deg, #FFB000, #00C2B2) 1;
       }
       .flashcard-back {
-        background-color: #fb7185; /* Rose color - kept static as it's not part of the main theme */
+        background-color: #fb7185; /* Rose color */
         /* High-contrast cream color for readability */
         color: #FFF8EE; 
         transform: rotateY(180deg);
+      }
+      
+      /* Crossword Game Styles */
+      .crossword-grid {
+        display: grid;
+        grid-template-columns: repeat(var(--grid-size, 10), minmax(0, 1fr));
+        gap: 2px;
+        touch-action: manipulation;
+      }
+      .crossword-cell {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background-color: #FFF8EE;
+        border: 1px solid #1E1A1820;
+        text-align: center;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(0.75rem, 3.5vw, 1.25rem);
+        transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        user-select: none;
+      }
+      .crossword-cell.black {
+        background-color: #1E1A18;
+        border-color: #1E1A18;
+      }
+      .crossword-cell.highlight {
+        background-color: #FFB00040; /* mustard/25 */
+      }
+      .crossword-cell.active {
+        background-color: #FFB000; /* mustard */
+        color: #1E1A18;
+        caret-color: transparent;
+      }
+      .crossword-cell .clue-number {
+        position: absolute;
+        top: 2px;
+        left: 3px;
+        font-size: clamp(0.5rem, 2vw, 0.75rem);
+        font-weight: 400;
+        color: #1E1A1880;
+      }
+      .crossword-cell.revealed {
+        color: #007BFF; /* A distinct blue for revealed letters */
+      }
+      .crossword-cell.correct {
+        color: #28a745; /* Green for correct answers */
+        background-color: #e9f7ec;
+      }
+      .crossword-cell.incorrect {
+        color: #dc3545; /* Red for incorrect answers */
+        background-color: #fce8e6;
+        text-decoration: line-through;
+      }
+       .crossword-cell.corrected {
+        color: #17a2b8; /* A distinct info blue for corrected letters */
+        background-color: #e2f3f5;
+      }
+       .keyboard {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+      }
+      .key {
+        height: 48px;
+        min-width: 28px;
+        padding: 0 8px;
+        background-color: #FFF8EE;
+        border: 1px solid #1E1A1830;
+        border-radius: 8px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+      }
+      .key:hover {
+        background-color: #1E1A1820;
+      }
+      .key:active {
+        background-color: #1E1A1840;
+      }
+      .key.wide {
+        flex-grow: 1;
+      }
+
+      /* Word Detective Styles */
+      .word-display {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      .letter-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 2rem;
+        height: 3rem;
+      }
+      .letter-box {
+        font-size: clamp(1.25rem, 5vw, 2rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .letter-placeholder {
+        border-bottom: 3px solid #1E1A18;
+      }
+      .special-char {
+        border-bottom: none;
+      }
+      .keyboard .key.correct {
+        background-color: #28a745;
+        color: white;
+      }
+      .keyboard .key.incorrect {
+        background-color: #dc3545;
+        color: white;
+        opacity: 0.6;
       }
     </style>
     <script>
@@ -73,10 +200,10 @@
         theme: {
           extend: {
             colors: {
-              'cream': 'var(--color-cream)',
-              'dark-brown': 'var(--color-dark-brown)',
-              'mustard': 'var(--color-mustard)',
-              'teal': 'var(--color-teal)',
+              'cream': '#FFF8EE',
+              'dark-brown': '#1E1A18',
+              'mustard': '#FFB000',
+              'teal': '#00C2B2',
             },
             fontFamily: {
               sans: ['Poppins', 'sans-serif'],
@@ -101,6 +228,11 @@
                 '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-10px)' },
                 '20%, 40%, 60%, 80%': { transform: 'translateX(10px)' },
               },
+              'shake-horizontal': {
+                '0%, 100%': { transform: 'translateX(0)' },
+                '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-5px)' },
+                '20%, 40%, 60%, 80%': { transform: 'translateX(5px)' },
+              },
               tada: {
                   '0%': { transform: 'scale(1)' },
                   '10%, 20%': { transform: 'scale(0.9) rotate(-3deg)' },
@@ -123,6 +255,7 @@
               'fade-in': 'fade-in 0.5s ease-in-out',
               'fade-in-down': 'fade-in-down 0.5s ease-out both',
               shake: 'shake 0.82s cubic-bezier(.36,.07,.19,.97) both',
+              'shake-horizontal': 'shake-horizontal 0.5s cubic-bezier(.36,.07,.19,.97) both',
               tada: 'tada 1s ease-in-out',
               'bounce-in': 'bounce-in 0.6s ease-out both',
               'gentle-bounce': 'gentle-bounce 2.5s ease-in-out infinite',
@@ -144,7 +277,7 @@
 }
 </script>
 </head>
-  <body class="bg-cream text-dark-brown transition-colors duration-300">
+  <body class="bg-cream text-dark-brown">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
