@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>English Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --color-cream: #FFF8EE;
+        --color-dark-brown: #1E1A18;
+        --color-mustard: #FFB000;
+        --color-teal: #00C2B2;
+      }
+      /* Flashcard specific styles */
+      .flashcard-container {
+        perspective: 1000px;
+        transition: opacity 1s ease-out, transform 1s ease-out, box-shadow 0.3s ease-in-out;
+        box-shadow: 0 4px 15px rgba(30, 26, 24, 0.05);
+        border-radius: 1.5rem; /* rounded-3xl */
+      }
+      .flashcard-container:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 8px 25px rgba(30, 26, 24, 0.1);
+      }
+      .flashcard-container.disappearing {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      .flashcard-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+      }
+      .flashcard-container.flipped .flashcard-inner {
+        transform: rotateY(180deg);
+      }
+      .flashcard-front, .flashcard-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        border-radius: 1.5rem; /* rounded-3xl */
+      }
+      .flashcard-front {
+        background-color: var(--color-cream);
+        /* Gradient border to make the card pop */
+        border: 3px solid transparent;
+        background-clip: padding-box;
+        border-image: linear-gradient(45deg, var(--color-mustard), var(--color-teal)) 1;
+      }
+      .flashcard-back {
+        background-color: #fb7185; /* Rose color - kept static as it's not part of the main theme */
+        /* High-contrast cream color for readability */
+        color: #FFF8EE; 
+        transform: rotateY(180deg);
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'cream': 'var(--color-cream)',
+              'dark-brown': 'var(--color-dark-brown)',
+              'mustard': 'var(--color-mustard)',
+              'teal': 'var(--color-teal)',
+            },
+            fontFamily: {
+              sans: ['Poppins', 'sans-serif'],
+            },
+            keyframes: {
+              'fade-in': {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              'fade-in-down': {
+                '0%': {
+                  opacity: '0',
+                  transform: 'translateY(-20px)'
+                },
+                '100%': {
+                  opacity: '1',
+                  transform: 'translateY(0)'
+                },
+              },
+              shake: {
+                '0%, 100%': { transform: 'translateX(0)' },
+                '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-10px)' },
+                '20%, 40%, 60%, 80%': { transform: 'translateX(10px)' },
+              },
+              tada: {
+                  '0%': { transform: 'scale(1)' },
+                  '10%, 20%': { transform: 'scale(0.9) rotate(-3deg)' },
+                  '30%, 50%, 70%, 90%': { transform: 'scale(1.1) rotate(3deg)' },
+                  '40%, 60%, 80%': { transform: 'scale(1.1) rotate(-3deg)' },
+                  '100%': { transform: 'scale(1) rotate(0)' }
+              },
+              'bounce-in': {
+                '0%': { transform: 'scale(0.5)', opacity: '0' },
+                '60%': { transform: 'scale(1.1)', opacity: '1' },
+                '80%': { transform: 'scale(0.95)' },
+                '100%': { transform: 'scale(1)' },
+              },
+              'gentle-bounce': {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-6px)' },
+              },
+            },
+            animation: {
+              'fade-in': 'fade-in 0.5s ease-in-out',
+              'fade-in-down': 'fade-in-down 0.5s ease-out both',
+              shake: 'shake 0.82s cubic-bezier(.36,.07,.19,.97) both',
+              tada: 'tada 1s ease-in-out',
+              'bounce-in': 'bounce-in 0.6s ease-out both',
+              'gentle-bounce': 'gentle-bounce 2.5s ease-in-out infinite',
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "canvas-confetti": "https://aistudiocdn.com/canvas-confetti@^1.9.4"
+  }
+}
+</script>
+</head>
+  <body class="bg-cream text-dark-brown transition-colors duration-300">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

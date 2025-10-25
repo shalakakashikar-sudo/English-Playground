@@ -1,0 +1,196 @@
+// @/services/gameDataService.ts
+
+import { DB } from '../database/db';
+import { GameSettings, Question, DailyContentData, FlashcardData, Difficulty } from '../types';
+import { getFlashcardProgress } from '../utils/flashcardProgress';
+
+/**
+ * Shuffles an array in place and returns it.
+ * @param array The array to shuffle.
+ */
+const shuffle = <T>(array: T[]): T[] => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
+/**
+ * Creates a multiple-choice question from a database entry (word or idiom).
+ * @param correctEntry The correct Word or Idiom from the database.
+ * @param allEntries The pool of all possible entries of the same type to generate wrong answers from.
+ * @param type The type of question to generate.
+ */
+const createMultipleChoiceQuestion = (
+    correctEntry: { term: string; definition: string },
+    allEntries: { term: string; definition: string }[],
+    type: 'definition' | 'term'
+): Omit<Question, 'explanation'> => {
+    
+    // Filter out the correct answer to create a pool of distractors
+    const distractors = allEntries.filter(entry => entry.term !== correctEntry.term);
+    const shuffledDistractors = shuffle([...distractors]);
+
+    let questionText = '';
+    let correctAnswer = '';
+    const options: string[] = [];
+
+    if (type === 'definition') {
+        // "What is the definition of 'term'?"
+        questionText = `What is the definition of "${correctEntry.term}"?`;
+        correctAnswer = correctEntry.definition;
+        options.push(correctAnswer);
+        for (let i = 0; i < 3; i++) {
+            options.push(shuffledDistractors[i].definition);
+        }
+    } else { // type === 'term'
+        // "Which word or phrase means: "${correctEntry.definition}"?"
+        questionText = `Which word or phrase means: "${correctEntry.definition}"?`;
+        correctAnswer = correctEntry.term;
+        options.push(correctAnswer);
+        for (let i = 0; i < 3; i++) {
+            options.push(shuffledDistractors[i].term);
+        }
+    }
+
+    return {
+        question: questionText,
+        options: shuffle(options),
+        correctAnswer: correctAnswer,
+    };
+};
+
+export const generateQuestions = (settings: GameSettings): Question[] => {
+  const { topic, numQuestions, difficulty } = settings;
+  const questions: Question[] = [];
+  
+  // Ensure we don't request more questions than available
+  const count = Math.min(numQuestions, 50); // Hard cap to prevent performance issues
+
+  switch (topic) {
+    case 'Vocabulary': {
+      const filteredWords = DB.words.filter(w => w.difficulty === difficulty);
+      const shuffledWords = shuffle([...filteredWords]);
+      for (let i = 0; i < Math.min(count, shuffledWords.length); i++) {
+        const word = shuffledWords[i];
+        const questionType = Math.random() > 0.5 ? 'definition' : 'term';
+        const mcq = createMultipleChoiceQuestion(word, DB.words, questionType);
+        questions.push({ ...mcq, explanation: `"${word.term}" means: ${word.definition}.` });
+      }
+      break;
+    }
+    case 'Idioms': {
+      const filteredIdioms = DB.idioms.filter(i => i.difficulty === difficulty);
+      const shuffledIdioms = shuffle([...filteredIdioms]);
+      for (let i = 0; i < Math.min(count, shuffledIdioms.length); i++) {
+        const idiom = shuffledIdioms[i];
+        // For idioms, asking for the definition is most common
+        const mcq = createMultipleChoiceQuestion(idiom, DB.idioms, 'definition');
+        questions.push({ ...mcq, explanation: `The idiom "${idiom.term}" means: ${idiom.definition}. Example: ${idiom.example}` });
+      }
+      break;
+    }
+    case 'Synonyms/Antonyms': {
+      const filteredWords = DB.words.filter(w => w.difficulty === difficulty);
+      const shuffledWords = shuffle([...filteredWords]).filter(w => w.synonyms.length > 0 || w.antonyms.length > 0);
+      for (let i = 0; i < Math.min(count, shuffledWords.length); i++) {
+        const word = shuffledWords[i];
+        const isSynonym = Math.random() > 0.5 && word.synonyms.length > 0;
+        
+        if (isSynonym) {
+            const correctAnswer = shuffle([...word.synonyms])[0];
+            const distractors = DB.words
+                .filter(w => w.term !== word.term && !word.synonyms.includes(w.term))
+                .map(w => w.term);
+            const options = shuffle([correctAnswer, ...shuffle(distractors).slice(0, 3)]);
+            questions.push({
+                question: `Which of the following is a synonym for "${word.term}"?`,
+                options,
+                correctAnswer,
+                explanation: `A synonym for "${word.term}" is "${correctAnswer}". Both words relate to "${word.definition}".`
+            });
+        } else if (word.antonyms.length > 0) { // Antonym question
+             const correctAnswer = shuffle([...word.antonyms])[0];
+             const distractors = DB.words
+                .filter(w => w.term !== word.term && !word.antonyms.includes(w.term))
+                .map(w => w.term);
+             const options = shuffle([correctAnswer, ...shuffle(distractors).slice(0, 3)]);
+             questions.push({
+                question: `Which of the following is an antonym for "${word.term}"?`,
+                options,
+                correctAnswer,
+                explanation: `An antonym for "${word.term}" is "${correctAnswer}". They have opposite meanings.`
+            });
+        }
+      }
+      break;
+    }
+    case 'Grammar': {
+      const filteredGrammar = DB.grammar.filter(g => g.difficulty === difficulty);
+      const shuffledGrammar = shuffle([...filteredGrammar]);
+      for (let i = 0; i < Math.min(count, shuffledGrammar.length); i++) {
+        const q = shuffledGrammar[i];
+        questions.push({
+          question: q.question,
+          options: shuffle([...q.options]), // Shuffle options for variety
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+        });
+      }
+      break;
+    }
+    default:
+      throw new Error(`Unsupported game topic: ${topic}`);
+  }
+  
+  return questions;
+};
+
+export const getDailyContent = (): DailyContentData => {
+  const randomWord = shuffle([...DB.words])[0];
+  const randomQuote = shuffle([...DB.quotes])[0];
+  
+  const progress = getFlashcardProgress();
+  const allCards: FlashcardData[] = shuffle([
+    ...DB.words.map(w => ({ term: w.term, definition: w.definition, type: 'word' as const })),
+    ...DB.idioms.map(i => ({ term: i.term, definition: i.definition, type: 'idiom' as const })),
+  ]);
+
+  const needsReviewCards = allCards.filter(c => progress[c.term] === 'needs_review');
+  const knownCards = allCards.filter(c => progress[c.term] === 'known');
+  const newCards = allCards.filter(c => !progress[c.term]);
+
+  const DAILY_FLASHCARD_COUNT = 8;
+  const NEEDS_REVIEW_TARGET = 5;
+
+  let selectedCards: FlashcardData[] = [];
+
+  // 1. Prioritize 'needs review' cards
+  selectedCards.push(...shuffle(needsReviewCards).slice(0, NEEDS_REVIEW_TARGET));
+
+  // 2. Fill the rest with 'new' cards
+  let remainingSlots = DAILY_FLASHCARD_COUNT - selectedCards.length;
+  if (remainingSlots > 0) {
+    selectedCards.push(...shuffle(newCards).slice(0, remainingSlots));
+  }
+
+  // 3. If still not enough, fill with 'known' cards
+  remainingSlots = DAILY_FLASHCARD_COUNT - selectedCards.length;
+  if (remainingSlots > 0) {
+     selectedCards.push(...shuffle(knownCards).slice(0, remainingSlots));
+  }
+
+  return {
+    wordOfTheDay: {
+      word: randomWord.term,
+      definition: randomWord.definition,
+      exampleSentence: randomWord.example || `(No example sentence available for this word.)`,
+    },
+    quoteOfTheDay: {
+      quote: randomQuote.quote,
+      author: randomQuote.author,
+    },
+    flashcards: selectedCards,
+  };
+};
