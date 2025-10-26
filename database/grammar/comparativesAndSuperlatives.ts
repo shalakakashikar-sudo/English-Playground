@@ -1,0 +1,28 @@
+// @/database/grammar/comparativesAndSuperlatives.ts
+import { GrammarQuestion } from '../../types';
+
+export const comparativesAndSuperlatives: GrammarQuestion[] = [
+    { question: 'My brother is taller ___ me.', options: ['then', 'than', 'as', 'from'], correctAnswer: 'than', explanation: '"Than" is a conjunction used for comparisons, while "then" is an adverb related to time.', difficulty: 'Easy' },
+    { question: 'She is the ___ student in the class.', options: ['smart', 'smarter', 'smartest', 'more smart'], correctAnswer: 'smartest', explanation: 'The superlative form "smartest" is used to compare one person to the entire group ("in the class").', difficulty: 'Easy' },
+    { question: 'She runs faster ___ her sister.', options: ['than', 'then', 'as', 'from'], correctAnswer: 'than', explanation: '"Than" is used for comparisons.', difficulty: 'Easy' },
+    { question: 'She is the ___ singer in the choir.', options: ['good', 'better', 'best', 'more good'], correctAnswer: 'best', explanation: 'Superlative "best" compares one person to the whole group.', difficulty: 'Easy' },
+    { question: 'He works harder ___ anyone else in the team.', options: ['than', 'then', 'as', 'from'], correctAnswer: 'than', explanation: 'Used for comparison between two subjects.', difficulty: 'Easy' },
+    { question: 'She sings better ___ her sister.', options: ['than', 'then', 'as', 'from'], correctAnswer: 'than', explanation: '"Than" is used for making comparisons.', difficulty: 'Easy' },
+    { question: 'This car is ___ than that one.', options: ['fast', 'faster', 'fastest', 'more fast'], correctAnswer: 'faster', explanation: '"Faster" is the comparative form of the adjective "fast," used to compare two things.', difficulty: 'Easy' },
+    { question: 'Mount Everest is the ___ mountain in the world.', options: ['high', 'higher', 'highest', 'more high'], correctAnswer: 'highest', explanation: '"Highest" is the superlative form, used to compare one thing to all others in a group.', difficulty: 'Easy' },
+    { question: 'My sister is ___ tall ___ me.', options: ['so, so', 'as, than', 'as, as', 'so, than'], correctAnswer: 'as, as', explanation: 'The structure "as...as" is used to show that two things are equal in some way.', difficulty: 'Easy' },
+    { question: 'This dress is ___ than that one.', options: ['beautiful', 'more beautiful', 'most beautiful', 'beautifuller'], correctAnswer: 'more beautiful', explanation: 'Comparative form "more beautiful" compares two things.', difficulty: 'Easy' },
+    { question: 'He is ___ intelligent ___ his brother.', options: ['as, as', 'so, as', 'as, than', 'more, than'], correctAnswer: 'as, as', explanation: '"As...as" shows equality between two subjects.', difficulty: 'Easy' },
+    { question: 'He is as tall ___ his father.', options: ['as', 'than', 'so', 'like'], correctAnswer: 'as', explanation: '"As...as" is used for equality.', difficulty: 'Easy' },
+    { question: 'He was the ___ student in the class.', options: ['intelligent', 'more intelligent', 'most intelligent', 'intelligenter'], correctAnswer: 'most intelligent', explanation: 'Superlative "most intelligent" compares one to all others.', difficulty: 'Easy' },
+    { question: 'This is the ___ book I have ever read.', options: ['interesting', 'more interesting', 'most interesting', 'interestinger'], correctAnswer: 'most interesting', explanation: 'For longer adjectives like "interesting", we use "most" to form the superlative.', difficulty: 'Medium' },
+    { question: 'The weather today is ___ than it was yesterday.', options: ['bad', 'badder', 'worse', 'worst'], correctAnswer: 'worse', explanation: '"Bad" is an irregular adjective; its comparative form is "worse".', difficulty: 'Medium' },
+    { question: 'She is not as tall ___ her brother.', options: ['so', 'as', 'than', 'then'], correctAnswer: 'as', explanation: 'The structure for negative comparison is "not as...as" or "not so...as".', difficulty: 'Medium' },
+    { question: 'She is ___ intelligent as her sister.', options: ['as', 'so', 'more', 'than'], correctAnswer: 'as', explanation: '"As...as" is used for equality.', difficulty: 'Medium' },
+    { question: 'He drives ___ carefully than his brother.', options: ['more', 'most', 'as', 'so'], correctAnswer: 'more', explanation: 'Comparative adverb "more carefully" is used for comparison.', difficulty: 'Medium' },
+    { question: 'She speaks English better than ___ .', options: ['anyone', 'everyone', 'someone', 'no one'], correctAnswer: 'anyone', explanation: '"Better than anyone" is correct for comparisons.', difficulty: 'Medium' },
+    { question: 'This is by far the ___ movie I have ever seen.', options: ['worse', 'baddest', 'worst', 'most bad'], correctAnswer: 'worst', explanation: '"Worst" is the superlative form of "bad". "By far" is used to emphasize a superlative.', difficulty: 'Hard' },
+    { question: 'Of the two options, this one is the ___ expensive.', options: ['less', 'least', 'lesser', 'little'], correctAnswer: 'less', explanation: 'When comparing only two items, the comparative form "less" is used, not the superlative "least".', difficulty: 'Hard' },
+    { question: 'The ___ you study, the ___ you will learn.', options: ['more, more', 'much, much', 'most, most', 'more, most'], correctAnswer: 'more, more', explanation: '"The...the..." with two comparatives is a structure used to show a cause-and-effect relationship.', difficulty: 'Exam' },
+    { question: 'Of all the applicants, she is the ___ qualified for the position.', options: ['less', 'least', 'little', 'lesser'], correctAnswer: 'least', explanation: '"Least" is the superlative form of "little" and is used to compare one person to the entire group.', difficulty: 'Exam' },
+];

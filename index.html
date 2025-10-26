@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>English Playground</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/index.css" />
     <style>
       /* Flashcard specific styles */
       .flashcard-container {
@@ -60,6 +60,11 @@
         /* High-contrast cream color for readability */
         color: #FFF8EE; 
         transform: rotateY(180deg);
+      }
+      .dark .flashcard-front {
+        background-color: #2d3748; /* slate-800 */
+        color: #FFF8EE; /* cream */
+        border-image: linear-gradient(45deg, #FFB000, #00C2B2) 1;
       }
       
       /* Crossword Game Styles */
@@ -121,6 +126,35 @@
         color: #17a2b8; /* A distinct info blue for corrected letters */
         background-color: #e2f3f5;
       }
+      .dark .crossword-cell {
+        background-color: #4a5568; /* slate-600 */
+        border-color: #a0aec040; /* gray-400/25 */
+      }
+      .dark .crossword-cell.black {
+        background-color: #1a202c; /* slate-900 */
+        border-color: #1a202c;
+      }
+      .dark .crossword-cell.highlight {
+        background-color: #FFB00060; /* mustard/40 */
+      }
+      .dark .crossword-cell .clue-number {
+        color: #e2e8f080; /* gray-200/50 */
+      }
+      .dark .crossword-cell.revealed {
+        color: #63b3ed; /* blue-400 */
+      }
+      .dark .crossword-cell.correct {
+        color: #48bb78; /* green-500 */
+        background-color: #2f855a40; /* green-700/25 */
+      }
+      .dark .crossword-cell.incorrect {
+        color: #f56565; /* red-500 */
+        background-color: #c5303040; /* red-700/25 */
+      }
+      .dark .crossword-cell.corrected {
+        color: #4fd1c5; /* teal-400 */
+        background-color: #31979540; /* teal-600/25 */
+      }
        .keyboard {
         display: flex;
         flex-direction: column;
@@ -154,6 +188,16 @@
       .key.wide {
         flex-grow: 1;
       }
+      .dark .key {
+        background-color: #4a5568; /* slate-600 */
+        border-color: #a0aec050; /* gray-400/30 */
+      }
+      .dark .key:hover {
+        background-color: #718096; /* slate-500 */
+      }
+      .dark .key:active {
+        background-color: #a0aec0; /* slate-400 */
+      }
 
       /* Word Detective Styles */
       .word-display {
@@ -182,6 +226,9 @@
       .letter-placeholder {
         border-bottom: 3px solid #1E1A18;
       }
+      .dark .letter-placeholder {
+        border-bottom-color: #FFF8EE;
+      }
       .special-char {
         border-bottom: none;
       }
@@ -193,6 +240,12 @@
         background-color: #dc3545;
         color: white;
         opacity: 0.6;
+      }
+      .dark .keyboard .key.correct {
+        background-color: #2f855a; /* green-700 */
+      }
+      .dark .keyboard .key.incorrect {
+        background-color: #c53030; /* red-700 */
       }
 
       /* Mascot Commentary Styles */
@@ -226,117 +279,18 @@
         margin-left: -12px;
         margin-bottom: -12px;
       }
-    </style>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'cream': '#FFF8EE',
-              'dark-brown': '#1E1A18',
-              'mustard': '#FFB000',
-              'teal': '#00C2B2',
-            },
-            fontFamily: {
-              sans: ['Poppins', 'sans-serif'],
-            },
-            keyframes: {
-              'fade-in': {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              },
-              'fade-in-down': {
-                '0%': {
-                  opacity: '0',
-                  transform: 'translateY(-20px)'
-                },
-                '100%': {
-                  opacity: '1',
-                  transform: 'translateY(0)'
-                },
-              },
-              shake: {
-                '0%, 100%': { transform: 'translateX(0)' },
-                '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-10px)' },
-                '20%, 40%, 60%, 80%': { transform: 'translateX(10px)' },
-              },
-              'shake-horizontal': {
-                '0%, 100%': { transform: 'translateX(0)' },
-                '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-5px)' },
-                '20%, 40%, 60%, 80%': { transform: 'translateX(5px)' },
-              },
-              tada: {
-                  '0%': { transform: 'scale(1)' },
-                  '10%, 20%': { transform: 'scale(0.9) rotate(-3deg)' },
-                  '30%, 50%, 70%, 90%': { transform: 'scale(1.1) rotate(3deg)' },
-                  '40%, 60%, 80%': { transform: 'scale(1.1) rotate(-3deg)' },
-                  '100%': { transform: 'scale(1) rotate(0)' }
-              },
-              'bounce-in': {
-                '0%': { transform: 'scale(0.5)', opacity: '0' },
-                '60%': { transform: 'scale(1.1)', opacity: '1' },
-                '80%': { transform: 'scale(0.95)' },
-                '100%': { transform: 'scale(1)' },
-              },
-              'gentle-bounce': {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-6px)' },
-              },
-              'mascot-correct': {
-                '0%, 100%': { transform: 'translateY(0) scale(1)' },
-                '20%': { transform: 'translateY(-10px) scale(1.1) rotate(-5deg)' },
-                '40%': { transform: 'translateY(0) scale(0.95)' },
-                '60%': { transform: 'translateY(-5px) scale(1.05) rotate(5deg)' },
-                '80%': { transform: 'translateY(0) scale(1)' },
-              },
-              'mascot-incorrect': {
-                '0%, 100%': { transform: 'translateX(0)' },
-                '20%, 60%': { transform: 'translateX(-4px) rotate(-3deg)' },
-                '40%, 80%': { transform: 'translateX(4px) rotate(3deg)' },
-              },
-              'mascot-wowed': {
-                '0%, 100%': { transform: 'scale(1)' },
-                '30%': { transform: 'scale(1.2) rotate(5deg)' },
-                '60%': { transform: 'scale(0.9) rotate(-5deg)' },
-                '80%': { transform: 'scale(1.1)' },
-              },
-              'mascot-sad': {
-                '0%, 100%': { transform: 'translateY(0) rotate(0)' },
-                '50%': { transform: 'translateY(5px) rotate(-2deg)' },
-              }
-            },
-            animation: {
-              'fade-in': 'fade-in 0.5s ease-in-out',
-              'fade-in-down': 'fade-in-down 0.5s ease-out both',
-              shake: 'shake 0.82s cubic-bezier(.36,.07,.19,.97) both',
-              'shake-horizontal': 'shake-horizontal 0.5s cubic-bezier(.36,.07,.19,.97) both',
-              tada: 'tada 1s ease-in-out',
-              'bounce-in': 'bounce-in 0.6s ease-out both',
-              'gentle-bounce': 'gentle-bounce 2.5s ease-in-out infinite',
-              'mascot-correct': 'mascot-correct 0.8s ease-in-out',
-              'mascot-incorrect': 'mascot-incorrect 0.6s ease-in-out',
-              'mascot-wowed': 'mascot-wowed 0.7s ease-in-out',
-              'mascot-sad': 'mascot-sad 1s ease-in-out',
-            }
-          }
-        }
+      .dark .speech-bubble {
+        background: #2d3748; /* slate-800 */
+        color: #FFF8EE; /* cream */
+        border: 2px solid #FFF8EE;
       }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
-    "canvas-confetti": "https://aistudiocdn.com/canvas-confetti@^1.9.4"
-  }
-}
-</script>
-</head>
-  <body class="bg-cream text-dark-brown">
+      .dark .speech-bubble:after {
+        border-top-color: #FFF8EE;
+      }
+    </style>
+  </head>
+  <body class="bg-cream text-dark-brown dark:bg-slate-900 dark:text-cream transition-colors duration-300">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

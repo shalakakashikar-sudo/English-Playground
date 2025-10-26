@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { CrosswordPuzzle, CrosswordClue, CrosswordSettings } from '../../types';
+import { getCrosswordPuzzle } from '../../services/gameDataService';
+import { addPlayedCrosswordId } from '../../utils/crosswordProgress';
+import LoadingSpinner from '../LoadingSpinner';
 
-interface CrosswordBoardProps {
-  puzzle: CrosswordPuzzle;
-  settings: CrosswordSettings;
-  onReturnToMenu: () => void;
-}
 
 // SVG Icon Components
+const NewPuzzleIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M4 20h5v-5M20 4h-5v5" />
+    </svg>
+);
+
+
 const RevealIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -34,7 +39,15 @@ const BackspaceIcon = () => (
 );
 
 
-const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onReturnToMenu }) => {
+interface CrosswordBoardProps {
+  settings: CrosswordSettings;
+  onReturnToMenu: () => void;
+}
+
+const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ settings, onReturnToMenu }) => {
+  const [puzzle, setPuzzle] = useState<CrosswordPuzzle | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
   const [userGrid, setUserGrid] = useState<string[][]>([]);
   const [activeCell, setActiveCell] = useState<{ row: number; col: number } | null>(null);
   const [direction, setDirection] = useState<'across' | 'down'>('across');
@@ -46,8 +59,23 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
   const [isReviewMode, setIsReviewMode] = useState(false);
 
   const gridRef = useRef<HTMLDivElement>(null);
+  
+  const loadNewPuzzle = useCallback(() => {
+    setIsLoading(true);
+    // This is now a synchronous call, but we keep the loading state for UI consistency.
+    setTimeout(() => {
+        const newPuzzle = getCrosswordPuzzle(settings.difficulty);
+        setPuzzle(newPuzzle);
+        setIsLoading(false);
+    }, 200); // A small delay to make the transition feel smoother
+  }, [settings.difficulty]);
+
+  useEffect(() => {
+    loadNewPuzzle();
+  }, [loadNewPuzzle]);
 
   const initializeBoard = useCallback(() => {
+    if (!puzzle) return;
     const newGrid = Array(puzzle.size).fill(null).map(() => Array(puzzle.size).fill(''));
     setUserGrid(newGrid);
     setIsSubmitted(false);
@@ -55,6 +83,8 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
     setIsReviewMode(false);
     setRevealedCells(new Set());
     setTimeUp(false);
+    setActiveCell(null);
+    setDirection('across');
 
     if (settings.timerDuration > 0) {
         setTimeLeft(settings.timerDuration * 60);
@@ -62,12 +92,11 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
         setTimeLeft(null);
     }
     
-    // Find the first playable cell to activate
+    // Set initial active cell
     for(let r=0; r<puzzle.size; r++) {
       for(let c=0; c<puzzle.size; c++) {
         if(puzzle.gridSolution[r][c] !== null) {
           setActiveCell({ row: r, col: c });
-          setDirection('across');
           return;
         }
       }
@@ -75,29 +104,32 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
   }, [puzzle, settings.timerDuration]);
 
   useEffect(() => {
-    initializeBoard();
-  }, [initializeBoard]);
+    if (puzzle && !isLoading) {
+      initializeBoard();
+    }
+  }, [puzzle, isLoading, initializeBoard]);
 
-  // Timer countdown effect
   useEffect(() => {
     if (timeLeft === null || isSubmitted || timeLeft <= 0) {
-        return; // Stop the timer if no time left, it's off, or game is over
+        return;
     }
-
     const timerId = setInterval(() => {
         setTimeLeft(prev => (prev ? prev - 1 : 0));
     }, 1000);
-
     return () => clearInterval(timerId);
   }, [timeLeft, isSubmitted]);
   
   const handleSubmit = useCallback(() => {
-    if (isSubmitted) return;
+    if (isSubmitted || !puzzle) return;
     setIsSubmitted(true);
     setShowResultsOverlay(true);
-  }, [isSubmitted]);
 
-  // Time's up effect
+    // Mark static puzzle as played
+    if (puzzle && !puzzle.id.startsWith('db-gen-')) {
+        addPlayedCrosswordId(puzzle.id);
+    }
+  }, [isSubmitted, puzzle]);
+
   useEffect(() => {
     if (timeLeft === 0 && !isSubmitted) {
         setTimeUp(true);
@@ -106,6 +138,7 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
   }, [timeLeft, isSubmitted, handleSubmit]);
 
   const clueMap = useMemo(() => {
+    if (!puzzle) return new Map();
     const map = new Map<string, { across?: number; down?: number }>();
     puzzle.clues.across.forEach(clue => {
       const key = `${clue.row},${clue.col}`;
@@ -119,6 +152,7 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
   }, [puzzle]);
   
   const getWordForClue = (clue: CrosswordClue): string => {
+     if (!puzzle) return '';
      const isAcross = puzzle.clues.across.includes(clue);
      let word = '';
      for (let i = 0; i < clue.length; i++) {
@@ -130,7 +164,7 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
   };
 
   const { currentClue, highlightedCells } = useMemo(() => {
-    if (!activeCell) return { currentClue: null, highlightedCells: new Set() };
+    if (!activeCell || !puzzle) return { currentClue: null, highlightedCells: new Set() };
     
     const { row, col } = activeCell;
     let clue: CrosswordClue | undefined;
@@ -154,10 +188,10 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
     }
     
     return { currentClue: clue, highlightedCells: cells };
-  }, [activeCell, direction, puzzle.clues]);
+  }, [activeCell, direction, puzzle]);
 
   const handleCellClick = (row: number, col: number) => {
-    if (puzzle.gridSolution[row][col] === null || (isSubmitted && !isReviewMode)) return;
+    if (!puzzle || puzzle.gridSolution[row][col] === null || (isSubmitted && !isReviewMode)) return;
 
     if (activeCell && activeCell.row === row && activeCell.col === col) {
       setDirection(prev => (prev === 'across' ? 'down' : 'across'));
@@ -167,14 +201,14 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
   };
 
   const moveToNextCell = (row: number, col: number) => {
-    if (!currentClue) return;
+    if (!currentClue || !puzzle) return;
     const clueDirection = puzzle.clues.across.includes(currentClue) ? 'across' : 'down';
     if (clueDirection === 'across') {
       const nextCol = col + 1;
       if (nextCol < currentClue.col + currentClue.length && puzzle.gridSolution[row][nextCol] !== null) {
         setActiveCell({ row, col: nextCol });
       }
-    } else { // 'down'
+    } else {
       const nextRow = row + 1;
       if (nextRow < currentClue.row + currentClue.length && puzzle.gridSolution[nextRow][col] !== null) {
         setActiveCell({ row: nextRow, col });
@@ -190,7 +224,7 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
       if (prevCol >= currentClue.col) {
         setActiveCell({ row, col: prevCol });
       }
-    } else { // 'down'
+    } else {
         const prevRow = row - 1;
       if (prevRow >= currentClue.row) {
         setActiveCell({ row: prevRow, col });
@@ -215,11 +249,11 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
       setUserGrid(newGrid);
       moveToNextCell(row, col);
     }
-  }, [activeCell, userGrid, direction, currentClue, isSubmitted]);
+  }, [activeCell, userGrid, isSubmitted, currentClue, puzzle]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if(e.metaKey || e.ctrlKey || isSubmitted) return;
+      if(!puzzle || e.metaKey || e.ctrlKey || isSubmitted) return;
       
       e.preventDefault();
       if (e.key.length === 1 && e.key.match(/[a-z]/i)) {
@@ -243,10 +277,10 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyInput, activeCell, puzzle.size, direction, isSubmitted]);
+  }, [handleKeyInput, activeCell, puzzle, direction, isSubmitted]);
   
     const handleRevealLetter = () => {
-        if (!activeCell || isSubmitted) return;
+        if (!activeCell || isSubmitted || !puzzle) return;
         const { row, col } = activeCell;
         const correctLetter = puzzle.gridSolution[row][col];
         if (correctLetter) {
@@ -259,14 +293,14 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
     };
     
     const score = useMemo(() => {
-        if (!isSubmitted) return { correct: 0, total: 0 };
+        if (!isSubmitted || !puzzle) return { correct: 0, total: 0 };
         let correct = 0;
         let total = 0;
         for (let r = 0; r < puzzle.size; r++) {
             for (let c = 0; c < puzzle.size; c++) {
                 if (puzzle.gridSolution[r][c] !== null) {
                     total++;
-                    if (userGrid[r][c] === puzzle.gridSolution[r][c]) {
+                    if (userGrid[r] && userGrid[r][c] === puzzle.gridSolution[r][c]) {
                         correct++;
                     }
                 }
@@ -276,7 +310,7 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
     }, [isSubmitted, userGrid, puzzle]);
 
     const goToClue = (offset: number) => {
-        if (!currentClue) return;
+        if (!currentClue || !puzzle) return;
         const clueList = puzzle.clues[direction];
         const currentIndex = clueList.findIndex(c => c.num === currentClue.num && c.row === currentClue.row && c.col === currentClue.col);
         if (currentIndex === -1) return;
@@ -302,8 +336,16 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
     ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Backspace'],
   ];
 
+  if (isLoading || !puzzle) {
+    return (
+      <div className="bg-white/10 backdrop-blur-sm shadow-2xl rounded-3xl p-4 md:p-8 border-2 border-dark-brown/20 dark:bg-slate-800/50 dark:border-cream/20 animate-fade-in-down w-full flex items-center justify-center min-h-[50vh]">
+        <LoadingSpinner messages="Building a new puzzle..."/>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white/10 backdrop-blur-sm shadow-2xl rounded-3xl p-4 md:p-8 border-2 border-dark-brown/20 animate-fade-in-down w-full relative">
+    <div className="bg-white/10 backdrop-blur-sm shadow-2xl rounded-3xl p-4 md:p-8 border-2 border-dark-brown/20 dark:bg-slate-800/50 dark:border-cream/20 animate-fade-in-down w-full relative">
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Word Weaver</h1>
              {settings.timerDuration > 0 && timeLeft !== null && (
@@ -313,7 +355,7 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
             )}
             <button
                 onClick={onReturnToMenu}
-                className="text-dark-brown/50 hover:text-dark-brown transition-all p-2 rounded-full hover:bg-dark-brown/10 focus:outline-none focus:ring-2 focus:ring-dark-brown/50 transform hover:scale-110"
+                className="text-dark-brown/50 hover:text-dark-brown dark:text-cream/50 dark:hover:text-cream transition-all p-2 rounded-full hover:bg-dark-brown/10 dark:hover:bg-cream/10 focus:outline-none focus:ring-2 focus:ring-dark-brown/50 dark:focus:ring-cream/50 transform hover:scale-110"
                 aria-label="Return to Menu"
             >
              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -342,7 +384,7 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
                             let cellContent = userGrid[r]?.[c] || '';
 
                             if (isReviewMode) {
-                                const userLetter = userGrid[r][c];
+                                const userLetter = userGrid[r]?.[c];
                                 const correctLetter = puzzle.gridSolution[r][c];
                                 if (!isBlack) {
                                     if (userLetter === correctLetter) {
@@ -355,7 +397,7 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
                                 }
                             } else if (isSubmitted) {
                                 if (!isBlack) {
-                                    if (userGrid[r][c] === puzzle.gridSolution[r][c]) {
+                                    if (userGrid[r]?.[c] === puzzle.gridSolution[r][c]) {
                                         cellClass = 'correct';
                                     } else {
                                         cellClass = 'incorrect';
@@ -383,8 +425,8 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
             </div>
 
             <div className="flex-grow flex flex-col">
-                <div className="bg-dark-brown/5 p-4 rounded-2xl h-auto min-h-[6rem] mb-4 flex items-center justify-between text-center">
-                    <button onClick={() => goToClue(-1)} disabled={isReviewMode} className="p-2 rounded-full hover:bg-dark-brown/10 transition-colors disabled:opacity-50"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button>
+                <div className="bg-dark-brown/5 dark:bg-slate-900/50 p-4 rounded-2xl h-auto min-h-[6rem] mb-4 flex items-center justify-between text-center">
+                    <button onClick={() => goToClue(-1)} disabled={isReviewMode} className="p-2 rounded-full hover:bg-dark-brown/10 dark:hover:bg-cream/10 transition-colors disabled:opacity-50"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button>
                     <div className="flex-grow px-2">
                         {currentClue ? (
                             <>
@@ -399,10 +441,10 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
                                 )}
                             </>
                         ) : (
-                            <p className="text-dark-brown/60">Select a cell to see the clue.</p>
+                            <p className="text-dark-brown/60 dark:text-cream/60">Select a cell to see the clue.</p>
                         )}
                     </div>
-                     <button onClick={() => goToClue(1)} disabled={isReviewMode} className="p-2 rounded-full hover:bg-dark-brown/10 transition-colors disabled:opacity-50"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></button>
+                     <button onClick={() => goToClue(1)} disabled={isReviewMode} className="p-2 rounded-full hover:bg-dark-brown/10 dark:hover:bg-cream/10 transition-colors disabled:opacity-50"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></button>
                 </div>
                 
                  <div className="mt-auto space-y-4">
@@ -425,8 +467,8 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
                             ))}
                         </div>
                         <div className="flex justify-center gap-2">
-                            <button onClick={handleRevealLetter} disabled={isSubmitted} className="flex-1 flex items-center justify-center gap-2 bg-dark-brown/5 text-dark-brown/80 font-semibold py-3 px-4 rounded-xl hover:bg-dark-brown/10 disabled:opacity-50 transition-colors"><RevealIcon /> Reveal</button>
-                            <button onClick={initializeBoard} disabled={isSubmitted} className="flex-1 flex items-center justify-center gap-2 bg-dark-brown/5 text-dark-brown/80 font-semibold py-3 px-4 rounded-xl hover:bg-dark-brown/10 disabled:opacity-50 transition-colors"><ClearIcon /> Clear</button>
+                            <button onClick={handleRevealLetter} disabled={isSubmitted} className="flex-1 flex items-center justify-center gap-2 bg-dark-brown/5 dark:bg-cream/5 text-dark-brown/80 dark:text-cream/80 font-semibold py-3 px-4 rounded-xl hover:bg-dark-brown/10 dark:hover:bg-cream/10 disabled:opacity-50 transition-colors"><RevealIcon /> Reveal</button>
+                            <button onClick={initializeBoard} disabled={isSubmitted} className="flex-1 flex items-center justify-center gap-2 bg-dark-brown/5 dark:bg-cream/5 text-dark-brown/80 dark:text-cream/80 font-semibold py-3 px-4 rounded-xl hover:bg-dark-brown/10 dark:hover:bg-cream/10 disabled:opacity-50 transition-colors"><ClearIcon /> Clear</button>
                         </div>
                         <button
                             onClick={handleSubmit}
@@ -435,6 +477,16 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
                         >
                             <span className="flex items-center justify-center gap-2"><SubmitIcon /> Submit Puzzle</span>
                         </button>
+                         <button
+                            onClick={loadNewPuzzle}
+                            disabled={isSubmitted}
+                            className="w-full bg-mustard text-dark-brown font-bold py-4 px-8 rounded-2xl text-lg shadow-lg hover:bg-mustard/90 transform hover:-translate-y-1 transition-all duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-mustard/50 disabled:bg-mustard/50 disabled:transform-none"
+                        >
+                            <span className="flex items-center justify-center gap-2">
+                                <NewPuzzleIcon />
+                                New Puzzle
+                            </span>
+                        </button>
                         </>
                     )}
                 </div>
@@ -442,8 +494,8 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
         </div>
 
        {showResultsOverlay && (
-         <div className="absolute inset-0 bg-cream/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-3xl animate-fade-in">
-            <div className="bg-white p-8 rounded-2xl shadow-2xl text-center border-2 border-dark-brown/20 w-11/12 max-w-sm">
+         <div className="absolute inset-0 bg-cream/80 dark:bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-3xl animate-fade-in">
+            <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl text-center border-2 border-dark-brown/20 dark:border-cream/20 w-11/12 max-w-sm">
               <h2 className="text-3xl font-bold mb-2">{timeUp ? "Time's Up!" : 'Puzzle Submitted!'}</h2>
               <p className="text-xl mb-4">You got <span className="font-bold text-teal">{score.correct}</span> out of <span className="font-bold">{score.total}</span> cells correct.</p>
               <div className="space-y-3">
@@ -454,16 +506,16 @@ const CrosswordBoard: React.FC<CrosswordBoardProps> = ({ puzzle, settings, onRet
                   Review Answers
                 </button>
                 <button 
-                  onClick={initializeBoard}
-                  className="w-full bg-dark-brown/10 text-dark-brown font-bold py-3 px-6 rounded-xl text-lg shadow-sm hover:bg-dark-brown/20 transform hover:-translate-y-0.5 transition-all"
+                  onClick={loadNewPuzzle}
+                  className="w-full bg-dark-brown/10 dark:bg-cream/10 text-dark-brown dark:text-cream font-bold py-3 px-6 rounded-xl text-lg shadow-sm hover:bg-dark-brown/20 dark:hover:bg-cream/20 transform hover:-translate-y-0.5 transition-all"
                 >
-                  Clear & Retry
+                  Play New Puzzle
                 </button>
                 <button 
                   onClick={onReturnToMenu}
-                  className="w-full bg-dark-brown/10 text-dark-brown font-bold py-3 px-6 rounded-xl text-lg shadow-sm hover:bg-dark-brown/20 transform hover:-translate-y-0.5 transition-all"
+                  className="w-full bg-dark-brown/10 dark:bg-cream/10 text-dark-brown dark:text-cream font-bold py-3 px-6 rounded-xl text-lg shadow-sm hover:bg-dark-brown/20 dark:hover:bg-cream/20 transform hover:-translate-y-0.5 transition-all"
                 >
-                  New Puzzle
+                  Back to Menu
                 </button>
               </div>
             </div>

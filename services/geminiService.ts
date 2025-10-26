@@ -1,3 +1,5 @@
+
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Word, Difficulty, Idiom } from '../types';
 
@@ -33,7 +35,7 @@ export const generateVocabulary = async (difficulty: Difficulty, count: number, 
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-flash-lite-latest',
             contents: [{ parts: [{ text: prompt }] }],
             config: {
                 responseMimeType: 'application/json',
@@ -42,6 +44,7 @@ export const generateVocabulary = async (difficulty: Difficulty, count: number, 
                     items: wordSchema,
                 },
                 temperature: 0.8,
+                thinkingConfig: { thinkingBudget: 0 },
             },
         });
         
@@ -85,7 +88,7 @@ export const generateIdioms = async (difficulty: Difficulty, count: number, exis
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-flash-lite-latest',
             contents: [{ parts: [{ text: prompt }] }],
             config: {
                 responseMimeType: 'application/json',
@@ -94,6 +97,7 @@ export const generateIdioms = async (difficulty: Difficulty, count: number, exis
                     items: idiomSchema,
                 },
                 temperature: 0.8,
+                thinkingConfig: { thinkingBudget: 0 },
             },
         });
         
@@ -108,6 +112,6 @@ export const generateIdioms = async (difficulty: Difficulty, count: number, exis
 
     } catch (error) {
         console.error("Gemini API call for idioms failed:", error);
-        throw new Error("Failed to generate dynamic idioms from the AI.");
+        throw new Error("Failed to generate dynamic content from the AI.");
     }
 };
