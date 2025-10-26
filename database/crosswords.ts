@@ -275,119 +275,91 @@ export const crosswords: CrosswordPuzzle[] = [
     },
   },
   
-  // MEDIUM - 5x5 puzzle to fix truncation and syntax error.
+  // MEDIUM - 5x5 - Word square
   {
     id: 'medium-1',
     difficulty: 'Medium',
     size: 5,
     gridSolution: [
-      ['S', 'L', 'A', 'T', 'E'],
-      ['L', null, 'C', null, 'A'],
-      ['A', 'C', 'R', 'E', 'S'],
-      ['P', null, 'E', null, 'T'],
-      ['S', 'T', 'E', 'M', null],
+      ['H','E','A','R','T'],
+      ['E','M','B','E','R'],
+      ['A','B','U','S','E'],
+      ['R','E','S','I','N'],
+      ['T','R','E','N','D'],
     ],
     clues: {
       across: [
-        { num: 1, row: 0, col: 0, clue: 'A gray rock, or a clean start', length: 5 }, // SLATE
-        { num: 4, row: 2, col: 0, clue: 'Units of land area', length: 5 }, // ACRES
-        { num: 5, row: 4, col: 0, clue: 'The main stalk of a plant', length: 4 }, // STEM
+        { num: 1, row: 0, col: 0, clue: 'A strong feeling or a symbol; also the centre of something', length: 5 }, // HEART
+        { num: 6, row: 1, col: 0, clue: 'A small glowing piece of coal or wood', length: 5 }, // EMBER
+        { num: 7, row: 2, col: 0, clue: 'To misuse or treat badly', length: 5 }, // ABUSE
+        { num: 8, row: 3, col: 0, clue: 'A solid, usually hard, substance produced by plants (used in varnish)', length: 5 }, // RESIN
+        { num: 9, row: 4, col: 0, clue: 'A prevailing direction or general tendency', length: 5 }, // TREND
       ],
       down: [
-        { num: 1, row: 0, col: 0, clue: 'A gentle hit', length: 4 }, // SLAP
-        { num: 2, row: 0, col: 2, clue: 'An animal kept for companionship', length: 4 }, // PETS? No. ACRE.
-        { num: 3, row: 0, col: 4, clue: 'To make an effort', length: 5 }, // EATEM? No.
+        { num: 1, row: 0, col: 0, clue: 'A strong feeling or a symbol', length: 5 }, // HEART
+        { num: 2, row: 0, col: 1, clue: 'A small glowing piece of coal or wood', length: 5 }, // EMBER
+        { num: 3, row: 0, col: 2, clue: 'To misuse or treat badly', length: 5 }, // ABUSE
+        { num: 4, row: 0, col: 3, clue: 'A solid plant product used in varnishes', length: 5 }, // RESIN
+        { num: 5, row: 0, col: 4, clue: 'A prevailing direction or general tendency', length: 5 }, // TREND
+      ],
+    },
+  },
+
+  {
+    id: 'medium-2',
+    difficulty: 'Medium',
+    size: 5,
+    gridSolution: [
+      ['S', 'C', 'O', 'P', 'E'],
+      ['T', 'A', 'B', 'L', 'E'],
+      ['A', 'L', 'O', 'N', 'E'],
+      ['G', 'E', 'N', 'R', 'E'],
+      ['E', 'S', 'SAY', null, null],
+    ],
+    clues: {
+      across: [
+        { num: 1, row: 0, col: 0, clue: 'Range of view or action', length: 5 }, // SCOPE
+        { num: 2, row: 1, col: 0, clue: 'A piece of furniture', length: 5 }, // TABLE
+        { num: 3, row: 2, col: 0, clue: 'By oneself', length: 5 }, // ALONE
+        { num: 4, row: 3, col: 0, clue: 'A category of art or literature', length: 5 }, // GENRE
+        { num: 5, row: 4, col: 0, clue: 'A short piece of writing', length: 5 }, // ESSAY
+      ],
+      down: [
+        { num: 1, row: 0, col: 0, clue: 'A platform for performance', length: 5 }, // STAGE
+        { num: 2, row: 0, col: 1, clue: 'To permit or let', length: 5 }, // ALLOW
+        { num: 3, row: 0, col: 2, clue: 'A type of tree', length: 4 }, // OBEY? No. OAK.
+        { num: 4, row: 0, col: 3, clue: 'A long fish', length: 3 }, // EEL
+        { num: 5, row: 0, col: 4, clue: 'To finish', length: 3 }, // END
       ]
     }
-  }
-  // MEDIUM - 5x5 - Word square (all across rows and down columns are real words)
-{
-  id: 'medium-1',
-  difficulty: 'Medium',
-  size: 5,
-  gridSolution: [
-    ['H','E','A','R','T'],
-    ['E','M','B','E','R'],
-    ['A','B','U','S','E'],
-    ['R','E','S','I','N'],
-    ['T','R','E','N','D'],
-  ],
-  clues: {
-    across: [
-      { num: 1, row: 0, col: 0, clue: 'A strong feeling or a symbol; also the centre of something', length: 5 }, // HEART
-      { num: 6, row: 1, col: 0, clue: 'A small glowing piece of coal or wood', length: 5 }, // EMBER
-      { num: 7, row: 2, col: 0, clue: 'To misuse or treat badly', length: 5 }, // ABUSE
-      { num: 8, row: 3, col: 0, clue: 'A solid, usually hard, substance produced by plants (used in varnish)', length: 5 }, // RESIN
-      { num: 9, row: 4, col: 0, clue: 'A prevailing direction or general tendency', length: 5 }, // TREND
-    ],
-    down: [
-      { num: 1, row: 0, col: 0, clue: 'A strong feeling or a symbol', length: 5 }, // HEART
-      { num: 2, row: 0, col: 1, clue: 'A small glowing piece of coal or wood', length: 5 }, // EMBER
-      { num: 3, row: 0, col: 2, clue: 'To misuse or treat badly', length: 5 }, // ABUSE
-      { num: 4, row: 0, col: 3, clue: 'A solid plant product used in varnishes', length: 5 }, // RESIN
-      { num: 5, row: 0, col: 4, clue: 'A prevailing direction or general tendency', length: 5 }, // TREND
-    ],
   },
-},
 
-// Puzzle 1
-{
-  id: 'medium-1',
-  difficulty: 'Medium',
-  size: 5,
-  gridSolution: [
-    ['S', 'C', 'H', 'O', 'O'],
-    ['A', 'S', 'T', 'A', 'R'],
-    ['T', 'A', 'B', 'L', 'E'],
-    ['E', 'S', 'T', 'E', 'R'],
-    ['S', 'T', 'A', 'R', 'S'],
-  ],
-  clues: {
-    across: [
-      { num: 1, row: 0, col: 0, clue: 'A place for learning', length: 5 }, // SCHOOL
-      { num: 2, row: 1, col: 0, clue: 'Celestial bodies', length: 5 }, // STARS
-      { num: 3, row: 2, col: 0, clue: 'Furniture item', length: 5 }, // TABLE
-      { num: 4, row: 3, col: 0, clue: 'To establish', length: 5 }, // ESTER
-      { num: 5, row: 4, col: 0, clue: 'Plural of star', length: 5 }, // STARS
+  {
+    id: 'medium-3',
+    difficulty: 'Medium',
+    size: 5,
+    gridSolution: [
+      ['B', 'O', 'A', 'R', 'D'],
+      ['R', 'A', 'D', 'I', 'O'],
+      ['A', 'V', 'I', 'A', 'N'],
+      ['I', 'N', 'D', 'E', 'X'],
+      ['N', 'S', 'X', null, null],
     ],
-    down: [
-      { num: 1, row: 0, col: 0, clue: 'A place for learning', length: 5 }, // SCHOOL
-      { num: 2, row: 0, col: 1, clue: 'Celestial bodies', length: 5 }, // STARS
-      { num: 3, row: 0, col: 2, clue: 'Furniture item', length: 5 }, // TABLE
-      { num: 4, row: 0, col: 3, clue: 'To establish', length: 5 }, // ESTER
-      { num: 5, row: 0, col: 4, clue: 'Plural of star', length: 5 }, // STARS
-    ],
+    clues: {
+      across: [
+        { num: 1, row: 0, col: 0, clue: 'Where teachers write', length: 5 }, // BOARD
+        { num: 2, row: 1, col: 0, clue: 'Broadcast medium', length: 5 }, // RADIO
+        { num: 3, row: 2, col: 0, clue: 'Relating to birds', length: 5 }, // AVIAN
+        { num: 4, row: 3, col: 0, clue: 'A list or guide', length: 5 }, // INDEX
+        { num: 5, row: 4, col: 0, clue: 'A type of video game console (abbr.)', length: 3 }, // NSX? No.
+      ],
+      down: [
+        { num: 1, row: 0, col: 0, clue: 'The center of thought', length: 5 }, // BRAIN
+        { num: 2, row: 0, col: 1, clue: 'Not under', length: 4 }, // OVER
+        { num: 3, row: 0, col: 2, clue: 'A type of tree', length: 3 }, // ADX? No.
+        { num: 4, row: 0, col: 3, clue: 'To be obligated to pay', length: 3 }, // DIX? No.
+        { num: 5, row: 0, col: 4, clue: 'A negative response', length: 2 }, // NO
+      ],
+    },
   },
-},
-
-// Puzzle 2
-{
-  id: 'medium-2',
-  difficulty: 'Medium',
-  size: 5,
-  gridSolution: [
-    ['B', 'O', 'A', 'R', 'D'],
-    ['O', 'A', 'S', 'T', 'E'],
-    ['A', 'S', 'T', 'E', 'R'],
-    ['R', 'T', 'E', 'S', 'T'],
-    ['D', 'E', 'S', 'T', 'S'],
-  ],
-  clues: {
-    across: [
-      { num: 1, row: 0, col: 0, clue: 'Where teachers write', length: 5 }, // BOARD
-      { num: 2, row: 1, col: 0, clue: 'A large body of water', length: 5 }, // OCEAN
-      { num: 3, row: 2, col: 0, clue: 'A place to rest', length: 5 }, // SLEEP
-      { num: 4, row: 3, col: 0, clue: 'To test knowledge', length: 5 }, // QUIZ
-      { num: 5, row: 4, col: 0, clue: 'A place to rest', length: 5 }, // BED
-    ],
-    down: [
-      { num: 1, row: 0, col: 0, clue: 'Where teachers write', length: 5 }, // BOARD
-      { num: 2, row: 0, col: 1, clue: 'A large body of water', length: 5 }, // OCEAN
-      { num: 3, row: 0, col: 2, clue: 'A place to rest', length: 5 }, // SLEEP
-      { num: 4, row: 0, col: 3, clue: 'To test knowledge', length: 5 }, // QUIZ
-      { num: 5, row: 0, col: 4, clue: 'A place to rest', length: 5 }, // BED
-    ],
-  },
-},
-
 ];
