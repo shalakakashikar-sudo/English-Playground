@@ -3,6 +3,7 @@ import { UserProgress } from '../types';
 import Mascot from './Mascot';
 import ProgressBar from './ProgressBar';
 import { getXPForNextLevel, getPlayerTitle } from '../utils/progress';
+import { playSound } from '../utils/audio';
 
 interface MoreGamesProps {
   userProgress: UserProgress;
@@ -13,6 +14,11 @@ interface MoreGamesProps {
 
 const MoreGames: React.FC<MoreGamesProps> = ({ userProgress, onBackToMenu, onNavigateToCrosswordMenu, onNavigateToWordDetectiveMenu }) => {
   const playerTitle = getPlayerTitle(userProgress.level);
+
+  const handleNavigation = (navigateFunc: () => void) => {
+    playSound('click');
+    navigateFunc();
+  }
 
   return (
     <div className="bg-white/10 backdrop-blur-sm shadow-2xl rounded-3xl p-8 md:p-12 text-center border-2 border-dark-brown/20 dark:bg-slate-800/50 dark:border-cream/20 animate-fade-in">
@@ -34,7 +40,7 @@ const MoreGames: React.FC<MoreGamesProps> = ({ userProgress, onBackToMenu, onNav
       <div className="my-8 space-y-4">
         <div 
             className="bg-dark-brown/5 dark:bg-slate-900/50 p-6 rounded-2xl text-left cursor-pointer transition-all transform hover:scale-105 hover:bg-dark-brown/10 dark:hover:bg-slate-900/70"
-            onClick={onNavigateToCrosswordMenu}
+            onClick={() => handleNavigation(onNavigateToCrosswordMenu)}
             role="button"
             tabIndex={0}
             aria-label="Play Word Weaver Crossword"
@@ -45,7 +51,7 @@ const MoreGames: React.FC<MoreGamesProps> = ({ userProgress, onBackToMenu, onNav
         
         <div 
             className="bg-dark-brown/5 dark:bg-slate-900/50 p-6 rounded-2xl text-left cursor-pointer transition-all transform hover:scale-105 hover:bg-dark-brown/10 dark:hover:bg-slate-900/70"
-            onClick={onNavigateToWordDetectiveMenu}
+            onClick={() => handleNavigation(onNavigateToWordDetectiveMenu)}
             role="button"
             tabIndex={0}
             aria-label="Play Word Detective"
@@ -62,7 +68,7 @@ const MoreGames: React.FC<MoreGamesProps> = ({ userProgress, onBackToMenu, onNav
 
 
       <button 
-        onClick={onBackToMenu}
+        onClick={() => handleNavigation(onBackToMenu)}
         className="w-full bg-dark-brown text-white dark:bg-cream dark:text-dark-brown dark:hover:bg-cream/90 font-bold py-4 px-6 rounded-2xl text-lg shadow-lg hover:bg-dark-brown/90 transform hover:-translate-y-1 transition-all duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-dark-brown/50 dark:focus:ring-cream/50"
       >
         Back to Main Menu

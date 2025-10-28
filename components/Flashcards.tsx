@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FlashcardData, FlashcardStatus } from '../types';
 import { updateFlashcardStatus } from '../utils/flashcardProgress';
+import { playSound } from '../utils/audio';
 
 type CardState = FlashcardData & {
     id: number;
@@ -52,6 +53,7 @@ const Flashcards: React.FC<FlashcardsProps> = ({ initialData, reviewCount }) => 
 
   const handleSpeak = (e: React.MouseEvent, textToSpeak: string) => {
     e.stopPropagation();
+    playSound('click');
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = 'en-GB';
@@ -63,6 +65,7 @@ const Flashcards: React.FC<FlashcardsProps> = ({ initialData, reviewCount }) => 
   };
 
   const handleCardClick = (id: number) => {
+    playSound('flip');
     setCards(currentCards =>
       currentCards.map(c => (c.id === id ? { ...c, isFlipped: !c.isFlipped } : c))
     );
@@ -70,6 +73,7 @@ const Flashcards: React.FC<FlashcardsProps> = ({ initialData, reviewCount }) => 
   
   const handleMarkCard = (e: React.MouseEvent, id: number, term: string, status: FlashcardStatus) => {
     e.stopPropagation();
+    playSound('swoosh');
     updateFlashcardStatus(term, status);
     
     // Trigger disappearing animation
@@ -166,12 +170,16 @@ const Flashcards: React.FC<FlashcardsProps> = ({ initialData, reviewCount }) => 
       <div className="flex items-center gap-3 mb-4">
         <h2 className="text-lg font-semibold text-dark-brown/60 dark:text-cream/60 tracking-wider uppercase">Daily Flashcards</h2>
         {reviewCount > 0 && (
-            <div className="relative group">
-                <div className="absolute -inset-1.5 bg-rose-500 rounded-full blur opacity-75 animate-pulse"></div>
-                <div className="relative h-4 w-4 bg-rose-500 rounded-full"></div>
-                <span className="absolute -top-6 -right-12 w-max px-2 py-1 text-xs text-white bg-dark-brown dark:text-dark-brown dark:bg-cream rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="relative group" aria-label={`${reviewCount} card${reviewCount > 1 ? 's' : ''} to review`}>
+                <div className="relative flex items-center justify-center h-6 w-6">
+                    <div className="absolute -inset-1 bg-rose-500 rounded-full blur opacity-75 animate-pulse"></div>
+                    <div className="relative flex items-center justify-center h-full w-full bg-rose-500 rounded-full text-white text-xs font-bold z-10">
+                        {reviewCount}
+                    </div>
+                </div>
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 text-xs text-white bg-dark-brown dark:text-dark-brown dark:bg-cream rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
                     {reviewCount} card{reviewCount > 1 ? 's' : ''} for review!
-                </span>
+                </div>
             </div>
         )}
       </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 // FIX: Import MascotState from the central types file.
 import { Question, GameSettings, MascotState } from '../types';
@@ -6,6 +5,7 @@ import confetti from 'canvas-confetti';
 import Mascot from './Mascot';
 import MascotCommentary from './MascotCommentary';
 import { getRandomComment } from '../database/mascotComments';
+import { playSound } from '../utils/audio';
 
 interface GameBoardProps {
   questions: Question[];
@@ -55,6 +55,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ questions, settings, onGameEnd, o
 
   const handleNextQuestion = useCallback(() => {
     if (!isLastQuestion) {
+      playSound('swoosh');
       setCurrentQuestionIndex(prev => prev + 1);
       setIsAnswered(false);
       setSelectedAnswer(null);
@@ -62,6 +63,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ questions, settings, onGameEnd, o
       setMascotState('thinking');
       showCommentary(getRandomComment('THINKING'), 1500);
     } else {
+      playSound('gameOver');
       onGameEnd(score);
     }
   }, [isLastQuestion, onGameEnd, score, settings.timePerQuestion]);
@@ -73,12 +75,14 @@ const GameBoard: React.FC<GameBoardProps> = ({ questions, settings, onGameEnd, o
     
     const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
     if (isCorrect) {
+      playSound('correct');
       setScore(prevScore => prevScore + 1);
       const correctButton = document.querySelector(`[data-option="${CSS.escape(currentQuestion.correctAnswer)}"]`) as HTMLElement;
       triggerConfetti(correctButton);
       setMascotState('correct');
       showCommentary(getRandomComment('CORRECT_ANSWER'));
     } else {
+      playSound('incorrect');
       setMascotState('incorrect');
       showCommentary(getRandomComment('INCORRECT_ANSWER'));
     }
@@ -86,6 +90,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ questions, settings, onGameEnd, o
 
   const handleTimeUp = useCallback(() => {
     if (isAnswered) return;
+    playSound('incorrect');
     setIsAnswered(true);
     setSelectedAnswer(null); // Time's up is treated as a null answer
     setMascotState('incorrect');
@@ -111,6 +116,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ questions, settings, onGameEnd, o
 
   const handleSelectOption = (option: string) => {
     if (isAnswered) return;
+    playSound('click');
     setSelectedAnswer(option);
   };
 
@@ -148,7 +154,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ questions, settings, onGameEnd, o
       <div className="pt-20">
         <div className="flex justify-between items-center mb-4">
             <button 
-            onClick={onReturnToHome}
+            onClick={() => {
+              playSound('click');
+              onReturnToHome();
+            }}
             className="text-dark-brown/50 hover:text-dark-brown dark:text-cream/50 dark:hover:text-cream transition-all p-2 -ml-2 rounded-full hover:bg-dark-brown/10 dark:hover:bg-cream/10 focus:outline-none focus:ring-2 focus:ring-dark-brown/50 dark:focus:ring-cream/50 transform hover:scale-110"
             aria-label="Return to Home"
             >

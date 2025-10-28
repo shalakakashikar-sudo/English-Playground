@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { GameSettings, UserProgress, DailyContentData, Difficulty, MascotState } from '../types';
 import { difficulties, topics, questionCounts, timeLimits } from '../types';
@@ -12,6 +11,7 @@ import { getDailyContent } from '../services/gameDataService';
 import { getFlashcardProgress } from '../utils/flashcardProgress';
 import MascotCommentary from './MascotCommentary';
 import { getRandomComment } from '../database/mascotComments';
+import { playSound } from '../utils/audio';
 
 interface GameMenuProps {
   onStartGame: (settings: GameSettings) => void;
@@ -98,6 +98,7 @@ const GameMenu: React.FC<GameMenuProps> = ({ onStartGame, userProgress, onNaviga
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    playSound('start');
     const currentSettings = { topic, difficulty, numQuestions, timePerQuestion: Number(timePerQuestion) };
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentSettings));
@@ -108,6 +109,7 @@ const GameMenu: React.FC<GameMenuProps> = ({ onStartGame, userProgress, onNaviga
   };
   
   const handleMascotClick = () => {
+    playSound('click');
     setMascotAnimation('wowed');
     setTimeout(() => setMascotAnimation('default'), 700); // Duration of 'wowed' animation
 
@@ -126,13 +128,21 @@ const GameMenu: React.FC<GameMenuProps> = ({ onStartGame, userProgress, onNaviga
     }, 2500);
   };
   
+  const handleNavigateToMoreGames = () => {
+    playSound('click');
+    onNavigateToMoreGames();
+  };
+
   const CustomSelect = <T extends string | number,>({ label, value, options, onChange, optionTransformer }: { label: string, value: T, options: readonly T[], onChange: (value: T) => void, optionTransformer?: (opt: T) => string }) => (
     <div className="w-full">
       <label className="block text-sm font-semibold mb-2">{label}</label>
       <div className="relative">
         <select
           value={value}
-          onChange={(e) => onChange(e.target.value as T)}
+          onChange={(e) => {
+            playSound('click');
+            onChange(e.target.value as T);
+          }}
           className="w-full bg-cream border-2 border-dark-brown rounded-2xl py-3 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-teal transition-all dark:bg-slate-700 dark:border-slate-500 dark:text-cream"
         >
           {options.map((opt) => (
@@ -195,7 +205,10 @@ const GameMenu: React.FC<GameMenuProps> = ({ onStartGame, userProgress, onNaviga
           <div className="relative">
             <select
               value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+              onChange={(e) => {
+                playSound('click');
+                setDifficulty(e.target.value as Difficulty);
+              }}
               className="w-full bg-cream border-2 border-dark-brown rounded-2xl py-3 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-teal transition-all dark:bg-slate-700 dark:border-slate-500 dark:text-cream"
             >
               {difficulties.map((d) => {
@@ -237,7 +250,7 @@ const GameMenu: React.FC<GameMenuProps> = ({ onStartGame, userProgress, onNaviga
       </form>
       <div className="mt-4">
         <button 
-          onClick={onNavigateToMoreGames}
+          onClick={handleNavigateToMoreGames}
           className="w-full bg-dark-brown/10 text-dark-brown dark:bg-cream/10 dark:text-cream dark:hover:bg-cream/20 font-bold py-4 px-6 rounded-2xl text-lg shadow-md hover:bg-dark-brown/20 transform hover:-translate-y-1 transition-all duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-dark-brown/20 dark:focus:ring-cream/20"
         >
           More Games

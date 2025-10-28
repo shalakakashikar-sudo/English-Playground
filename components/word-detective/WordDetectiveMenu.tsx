@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Difficulty, UserProgress, WordDetectiveSettings, wordDetectiveQuestionCounts } from '../../types';
 import { difficulties } from '../../types';
 import Mascot from '../Mascot';
 import ProgressBar from '../ProgressBar';
 import { getXPForNextLevel, getPlayerTitle } from '../../utils/progress';
+import { playSound } from '../../utils/audio';
 
 interface WordDetectiveMenuProps {
   onStartGame: (settings: WordDetectiveSettings) => void;
@@ -29,7 +29,10 @@ const CustomSelect = <T extends string | number,>({ label, value, options, onCha
         <div className="relative">
         <select
             value={value}
-            onChange={(e) => onChange(e.target.value as T)}
+            onChange={(e) => {
+              playSound('click');
+              onChange(e.target.value as T);
+            }}
             className="w-full bg-cream border-2 border-dark-brown rounded-2xl py-3 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-teal transition-all dark:bg-slate-700 dark:border-slate-500 dark:text-cream"
         >
             {options.map((opt) => (
@@ -60,7 +63,13 @@ const WordDetectiveMenu: React.FC<WordDetectiveMenuProps> = ({ onStartGame, user
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    playSound('start');
     onStartGame({ topic, difficulty, numQuestions });
+  };
+  
+  const handleBack = () => {
+    playSound('click');
+    onBackToMenu();
   };
 
   return (
@@ -88,7 +97,10 @@ const WordDetectiveMenu: React.FC<WordDetectiveMenuProps> = ({ onStartGame, user
           <div className="relative">
             <select
               value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+              onChange={(e) => {
+                playSound('click');
+                setDifficulty(e.target.value as Difficulty);
+              }}
               className="w-full bg-cream border-2 border-dark-brown rounded-2xl py-3 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-teal transition-all dark:bg-slate-700 dark:border-slate-500 dark:text-cream"
             >
               {difficulties.map((d) => {
@@ -129,7 +141,7 @@ const WordDetectiveMenu: React.FC<WordDetectiveMenuProps> = ({ onStartGame, user
 
        <div className="mt-4">
         <button 
-          onClick={onBackToMenu}
+          onClick={handleBack}
           className="w-full bg-dark-brown/10 text-dark-brown dark:bg-cream/10 dark:text-cream dark:hover:bg-cream/20 font-bold py-4 px-6 rounded-2xl text-lg shadow-md hover:bg-dark-brown/20 transform hover:-translate-y-1 transition-all duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-dark-brown/20 dark:focus:ring-cream/20"
         >
           Back to Games

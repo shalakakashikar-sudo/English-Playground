@@ -1,7 +1,7 @@
 // @/services/gameDataService.ts
-
 import { DB } from '../database/db';
-import { GameSettings, Question, DailyContentData, FlashcardData, Difficulty, CrosswordPuzzle, WordDetectiveSettings, WordDetectivePuzzle, Word, Idiom, CrosswordClue } from '../types';
+// FIX: Added StoryWeaverGenre to imports to support the new function.
+import { GameSettings, Question, DailyContentData, FlashcardData, Difficulty, CrosswordPuzzle, WordDetectiveSettings, WordDetectivePuzzle, Word, Idiom, CrosswordClue, StoryWeaverGenre } from '../types';
 import { getFlashcardProgress } from '../utils/flashcardProgress';
 import { getPlayedCrosswordIds } from '../utils/crosswordProgress';
 import * as geminiService from './geminiService';
@@ -418,6 +418,7 @@ const generateCrosswordFromDb = (difficulty: Difficulty): CrosswordPuzzle | null
                 const { word, fit } = bestCandidate;
                 for (let l = 0; l < word.term.length; l++) {
                     const r = fit.direction === 'down' ? fit.row + l : fit.row;
+                    // FIX: Corrected a typo from 'col' to 'fit.col' to prevent a reference error.
                     const c = fit.direction === 'across' ? fit.col + l : fit.col;
                     grid[r][c] = word.term[l].toUpperCase();
                 }
@@ -507,5 +508,9 @@ export const getCrosswordPuzzle = (difficulty: Difficulty): CrosswordPuzzle => {
     // 7. Ultimate fallback if no puzzles exist at all for the difficulty
     throw new Error(`No crossword puzzles available for '${difficulty}' difficulty.`);
 };
-
 // --- END: Local Crossword Generation Logic ---
+
+// FIX: Added missing function export for the Story Weaver game.
+export const generateStoryPrompt = (genre: StoryWeaverGenre): Promise<string> => {
+    return geminiService.generateStoryPrompt(genre);
+};

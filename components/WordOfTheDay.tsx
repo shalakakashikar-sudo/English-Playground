@@ -1,5 +1,6 @@
 import React from 'react';
 import { WordOfTheDayData } from '../types';
+import { playSound } from '../utils/audio';
 
 interface WordOfTheDayProps {
   data: WordOfTheDayData | null;
@@ -8,6 +9,7 @@ interface WordOfTheDayProps {
 const WordOfTheDay: React.FC<WordOfTheDayProps> = ({ data }) => {
   
   const handleSpeak = (textToSpeak: string) => {
+    playSound('click');
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = 'en-GB';

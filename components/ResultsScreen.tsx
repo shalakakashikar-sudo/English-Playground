@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Mascot from './Mascot';
 import confetti from 'canvas-confetti';
@@ -8,6 +7,7 @@ import { getXPForNextLevel, getPlayerTitle } from '../utils/progress';
 import QuoteOfTheDay from './QuoteOfTheDay';
 import { getDailyContent } from '../services/gameDataService';
 import { getRandomComment } from '../database/mascotComments';
+import { playSound } from '../utils/audio';
 
 interface ResultsScreenProps {
   score: number;
@@ -31,8 +31,14 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, totalQuestions, on
   const newTitle = getPlayerTitle(newProgress.level);
   const hasNewTitle = levelledUp && oldTitle !== newTitle;
 
-  // Confetti effect for high scores or level ups
+  // Sound and Confetti effect
   useEffect(() => {
+    if (levelledUp) {
+      playSound('levelUp');
+    } else {
+      playSound('gameOver');
+    }
+
     const isHighScore = percentage >= HIGH_SCORE_THRESHOLD;
 
     if (isHighScore || levelledUp) {
@@ -56,7 +62,8 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, totalQuestions, on
 
       return () => clearInterval(interval);
     }
-  }, [percentage, levelledUp]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // XP Bar Animation Effect
   useEffect(() => {
@@ -107,10 +114,12 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, totalQuestions, on
   }, []);
 
   const handlePlayAgainClick = () => {
+    playSound('start');
     onRestart();
   };
 
   const handleBackToMenuClick = () => {
+    playSound('click');
     onBackToMenu();
   };
 

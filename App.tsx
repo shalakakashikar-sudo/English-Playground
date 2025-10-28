@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import GameMenu from './components/GameMenu';
 import GameBoard from './components/GameBoard';
@@ -12,6 +13,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import { GameState, Question, GameSettings, UserProgress, difficulties, CrosswordSettings, WordDetectivePuzzle, WordDetectiveSettings } from './types';
 import { generateQuestions, getWordDetectivePuzzles } from './services/gameDataService';
 import { getUserProgress, saveUserProgress, getXPForNextLevel } from './utils/progress';
+import { getMuteState, toggleMuteState, playSound } from './utils/audio';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.MENU);
@@ -23,6 +25,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [userProgress, setUserProgress] = useState<UserProgress>(() => getUserProgress());
   const [lastGameResult, setLastGameResult] = useState<{ score: number; xpGained: number; levelledUp: boolean, oldProgress: UserProgress } | null>(null);
+  const [isMuted, setIsMuted] = useState(() => getMuteState());
 
   // Theme state
   const [theme, setTheme] = useState(() => {
@@ -42,7 +45,16 @@ const App: React.FC = () => {
   }, [theme]);
 
   const toggleTheme = () => {
+    playSound('click');
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+  
+  const handleToggleMute = () => {
+    const newMuteState = toggleMuteState();
+    setIsMuted(newMuteState);
+    if (!newMuteState) {
+        playSound('click'); // Play sound on unmute
+    }
   };
 
   const startGame = useCallback(async (settings: GameSettings) => {
@@ -63,7 +75,7 @@ const App: React.FC = () => {
       setError(err.message || 'An unknown error occurred while preparing the game.');
       setGameState(GameState.ERROR);
     }
-  }, [setGameSettings, setCrosswordSettings, setWordDetectiveSettings, setError, setGameState, setQuestions]);
+  }, []);
   
   const startCrossword = useCallback((settings: CrosswordSettings) => {
     setError(null);
@@ -71,7 +83,7 @@ const App: React.FC = () => {
     setGameSettings(null);
     setWordDetectiveSettings(null);
     setGameState(GameState.CROSSWORD_PLAYING);
-  }, [setCrosswordSettings, setGameSettings, setWordDetectiveSettings, setGameState, setError]);
+  }, []);
 
   const startWordDetective = useCallback((settings: WordDetectiveSettings) => {
     setError(null);
@@ -86,7 +98,8 @@ const App: React.FC = () => {
       setError(err.message || 'An unknown error occurred while preparing Word Detective.');
       setGameState(GameState.ERROR);
     }
-  }, [setError, setGameSettings, setCrosswordSettings, setWordDetectivePuzzles, setWordDetectiveSettings, setGameState]);
+  }, []);
+  
 
   const handleGameEnd = useCallback((finalScore: number) => {
     const oldProgress = { ...userProgress };
@@ -111,8 +124,7 @@ const App: React.FC = () => {
     
     setLastGameResult({ score: finalScore, xpGained, levelledUp, oldProgress });
     setGameState(GameState.FINISHED);
-    // FIX: Add all dependencies to the dependency array.
-  }, [userProgress, gameSettings, setUserProgress, setLastGameResult, setGameState]);
+  }, [userProgress, gameSettings]);
 
   const handleWordDetectiveEnd = useCallback((finalScore: number) => {
     const oldProgress = { ...userProgress };
@@ -138,8 +150,7 @@ const App: React.FC = () => {
     
     setLastGameResult({ score: finalScore, xpGained, levelledUp, oldProgress });
     setGameState(GameState.FINISHED);
-    // FIX: Add all dependencies to the dependency array.
-  }, [userProgress, wordDetectiveSettings, setUserProgress, setLastGameResult, setGameState]);
+  }, [userProgress, wordDetectiveSettings]);
 
   const handleReturnToHome = () => {
     setGameState(GameState.MENU);
@@ -166,6 +177,7 @@ const App: React.FC = () => {
     setGameState(GameState.WORD_DETECTIVE_MENU);
   };
   
+
   const returnToCrosswordMenu = () => {
     setGameState(GameState.CROSSWORD_MENU);
     setCrosswordSettings(null);
@@ -176,6 +188,7 @@ const App: React.FC = () => {
     setWordDetectivePuzzles([]);
     setWordDetectiveSettings(null);
   };
+
 
   const restartGame = async () => {
     if (gameSettings) {
@@ -275,10 +288,25 @@ const App: React.FC = () => {
       )}
     </button>
   );
+  
+  const SoundToggle = () => (
+    <button
+      onClick={handleToggleMute}
+      className="fixed top-4 right-16 z-50 p-2 rounded-full bg-dark-brown/10 dark:bg-cream/10 text-dark-brown dark:text-cream hover:bg-dark-brown/20 dark:hover:bg-cream/20 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal dark:focus:ring-offset-slate-900"
+      aria-label="Toggle sound"
+    >
+      {isMuted ? (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clipRule="evenodd" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l4-4m0 0l-4-4m4 4H7" /></svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+      )}
+    </button>
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 font-sans relative">
        <ThemeToggle />
+       <SoundToggle />
        <footer className="fixed top-0 left-1/2 -translate-x-1/2 py-2 text-xs text-dark-brown/50 dark:text-cream/50 font-light z-20">
             Created by Shalaka Kashikar
         </footer>

@@ -115,3 +115,44 @@ export const generateIdioms = async (difficulty: Difficulty, count: number, exis
         throw new Error("Failed to generate dynamic content from the AI.");
     }
 };
+
+// FIX: Added missing function to generate story prompts for the Story Weaver game.
+export const generateStoryPrompt = async (genre: string): Promise<string> => {
+    const prompt = `Write a single, compelling, and mysterious first sentence for a ${genre} story. The sentence should immediately draw the reader in and set a clear tone for the genre. Do not add any preamble or explanation, just provide the sentence.`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [{ parts: [{ text: prompt }] }],
+            config: {
+                temperature: 0.9,
+            },
+        });
+        
+        const firstLine = response.text.trim();
+        if (!firstLine) {
+            throw new Error("Generated an empty first line.");
+        }
+        
+        return firstLine;
+    } catch (error) {
+        console.error("Gemini API call for story prompt failed:", error);
+        // Fallback prompt
+        switch(genre.toLowerCase()) {
+            case 'fantasy':
+                return 'The ancient map, discovered in a forgotten library, showed a single island that didn’t exist on any other chart.';
+            case 'sci-fi':
+                return 'The first message from the alien probe wasn\'t a greeting; it was a warning.';
+            case 'mystery':
+                return 'By the time Detective Miles arrived, the only thing missing from the crime scene was the victim.';
+            case 'adventure':
+                return 'The inheritance wasn\'t money or jewels, but a single, cryptic key and a note that simply said: "Find the other half."';
+            case 'horror':
+                return 'The last thing I remember before the cellar door slammed shut was the doll’s eyes, slowly turning to watch me.';
+            case 'comedy':
+                return 'Kevin, a squirrel of questionable intelligence and unwavering optimism, decided today was the day he would steal the world\'s largest acorn from the town square statue.';
+            default:
+                return `The old house at the end of the lane stood silent, holding its breath as the first visitor in fifty years approached the door.`;
+        }
+    }
+};

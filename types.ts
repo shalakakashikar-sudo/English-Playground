@@ -143,3 +143,21 @@ export interface WordDetectivePuzzle {
   definition: string;
   topic: 'Words' | 'Idioms';
 }
+
+// FIX: Added missing types for Story Weaver game.
+// Types for Story Weaver Game
+export const storyWeaverGenres = ['Fantasy', 'Sci-Fi', 'Mystery', 'Adventure', 'Horror', 'Comedy'] as const;
+export type StoryWeaverGenre = typeof storyWeaverGenres[number];
+
+export const storyWeaverLengths = [6, 8, 10, 12] as const;
+export type StoryWeaverLength = typeof storyWeaverLengths[number];
+
+export interface StoryWeaverSettings {
+  genre: StoryWeaverGenre;
+  length: StoryWeaverLength; // Total number of turns (user + AI)
+}
+
+export interface StoryTurn {
+    author: 'ai' | 'user';
+    text: string;
+}

@@ -4,6 +4,7 @@ import { difficulties } from '../../types';
 import Mascot from '../Mascot';
 import ProgressBar from '../ProgressBar';
 import { getXPForNextLevel, getPlayerTitle } from '../../utils/progress';
+import { playSound } from '../../utils/audio';
 
 interface CrosswordMenuProps {
   onStartCrossword: (settings: CrosswordSettings) => void;
@@ -27,7 +28,13 @@ const CrosswordMenu: React.FC<CrosswordMenuProps> = ({ onStartCrossword, userPro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    playSound('start');
     onStartCrossword({ difficulty, timerDuration: Number(timerDuration) });
+  };
+  
+  const handleBack = () => {
+    playSound('click');
+    onBackToMenu();
   };
 
   return (
@@ -53,7 +60,10 @@ const CrosswordMenu: React.FC<CrosswordMenuProps> = ({ onStartCrossword, userPro
           <div className="relative">
             <select
               value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+              onChange={(e) => {
+                playSound('click');
+                setDifficulty(e.target.value as Difficulty);
+              }}
               className="w-full bg-cream border-2 border-dark-brown rounded-2xl py-3 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-teal transition-all dark:bg-slate-700 dark:border-slate-500 dark:text-cream"
             >
               {difficulties.map((d) => {
@@ -82,7 +92,10 @@ const CrosswordMenu: React.FC<CrosswordMenuProps> = ({ onStartCrossword, userPro
             <div className="relative">
                 <select
                     value={timerDuration}
-                    onChange={(e) => setTimerDuration(Number(e.target.value))}
+                    onChange={(e) => {
+                      playSound('click');
+                      setTimerDuration(Number(e.target.value));
+                    }}
                     className="w-full bg-cream border-2 border-dark-brown rounded-2xl py-3 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-teal transition-all dark:bg-slate-700 dark:border-slate-500 dark:text-cream"
                 >
                     {crosswordTimeLimits.map((t) => (
@@ -107,7 +120,7 @@ const CrosswordMenu: React.FC<CrosswordMenuProps> = ({ onStartCrossword, userPro
 
        <div className="mt-4">
         <button 
-          onClick={onBackToMenu}
+          onClick={handleBack}
           className="w-full bg-dark-brown/10 text-dark-brown dark:bg-cream/10 dark:text-cream dark:hover:bg-cream/20 font-bold py-4 px-6 rounded-2xl text-lg shadow-md hover:bg-dark-brown/20 transform hover:-translate-y-1 transition-all duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-dark-brown/20 dark:focus:ring-cream/20"
         >
           Back to Games
